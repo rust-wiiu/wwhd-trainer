@@ -1,0 +1,11 @@
+[package]
+name = "wwhd-trainer"
+version = "0.1.0"
+edition = "2021"
+authors = ["29th-Day"]
+license = "GPL3"
+
+[dependencies]
+wut = { path = "../wut", version = "*" }
+wups = { path = "../wups", version = "*", features = ["panic_handler"] }
+overlay = { path = "../overlay", version = "*" }
