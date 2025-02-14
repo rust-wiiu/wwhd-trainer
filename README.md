@@ -1,7 +1,7 @@
 # WWHD Trainer - Plugin for Aroma
 
 > [!WARNING]  
-> This plugin (and rust-wiiu) is still in development. Expect bugs and missing features.
+> This plugin (and rust-wiiu) is still in development. Expect bugs and missing features. The documentation was quickly put together and may contain dated information - once development has stabilized, proper documentation will be provided.
 
 A plugin for the Aroma Homebrew Environment which has a range of cheats, modifications and information about Wind Waker HD. This plugin is written for speedrun practice but can be used by everybody who wants to do shenanigans inside WWHD.
 
