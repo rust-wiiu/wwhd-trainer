@@ -8,6 +8,8 @@ use wut::*;
 use overlay;
 use wups::*;
 
+mod stages;
+
 WUPS_PLUGIN_NAME!("WWHD Trainer");
 
 static HANDLE: sync::RwLock<Option<thread::JoinHandle>> = sync::RwLock::new(None);
@@ -182,18 +184,38 @@ fn overlay_thread() {
             Menu::new(
                 "Stage",
                 vec![
-                    Button::new("Current", || unsafe {
+                    // Button::new("Current", || unsafe {
+                    //     let stage = 0x109763f0 as *mut [u8; 8];
+                    //     println!("stage: {:02x?}", core::ptr::read(stage));
+
+                    //     let spawn = 0x109763f9 as *mut u8;
+                    //     println!("spawn: {:02x?}", core::ptr::read(spawn));
+
+                    //     let room = 0x109763fa as *mut u8;
+                    //     println!("room: {:02x?}", core::ptr::read(room));
+
+                    //     let layer = 0x109763fb as *mut u8;
+                    //     println!("layer: {:02x?}", core::ptr::read(layer));
+                    // }),
+                    Text::new(|| unsafe {
                         let stage = 0x109763f0 as *mut [u8; 8];
                         println!("stage: {:02x?}", core::ptr::read(stage));
 
                         let spawn = 0x109763f9 as *mut u8;
-                        println!("spawn: {:02x?}", core::ptr::read(spawn));
+                        // println!("spawn: {:02x?}", core::ptr::read(spawn));
 
                         let room = 0x109763fa as *mut u8;
-                        println!("room: {:02x?}", core::ptr::read(room));
+                        // println!("room: {:02x?}", core::ptr::read(room));
 
                         let layer = 0x109763fb as *mut u8;
-                        println!("layer: {:02x?}", core::ptr::read(layer));
+                        // println!("layer: {:02x?}", core::ptr::read(layer));
+
+                        format!(
+                            "Spawn: {}, Room: {}, Layer: {}",
+                            core::ptr::read(spawn),
+                            core::ptr::read(room),
+                            core::ptr::read(layer)
+                        )
                     }),
                     Select::new(
                         "Great Sea",
@@ -208,10 +230,45 @@ fn overlay_thread() {
                             "Four-Eye Reef",
                             "Mother & Child Isle",
                             "Spectacle Island",
-                            "Windfall",
+                            "Windfall Island",
                             "Pawprint Isle",
                             "Dragon Roost Mt",
                             "Flight Control Platform",
+                            "W. Fairy Island",
+                            "Rock Spire Isle",
+                            "Tingle Island",
+                            "N. Triangle Isle",
+                            "E. Fairy Isle",
+                            "Fire Mountain",
+                            "Star Belt Archipelago",
+                            "Three-Eye Isle",
+                            "Greatfish Isle",
+                            "Cyclops Reef",
+                            "Six-Eye Reef",
+                            "Tower of Gods",
+                            "E. Triangle Isle",
+                            "Thorned Fairy Island",
+                            "Neele Rock Isle",
+                            "Islet of Steel",
+                            "Stonewatcher Island",
+                            "S. Triangle Isle",
+                            "Links Oasis",
+                            "Bomb Island",
+                            "Bird's Peak Rock",
+                            "Diamond Steppe Island",
+                            "Five-Eye Reef",
+                            "Shark Island",
+                            "S. Fairy Island",
+                            "Ice Ring Isle",
+                            "Forest Haven",
+                            "Cliff Plateau Isles",
+                            "Horseshoe Isle",
+                            "Outset Island",
+                            "Headstone Island",
+                            "Two-Eye Reef",
+                            "Angular Isles",
+                            "Boating Course",
+                            "Five-Star Isles",
                         ],
                         |i, _| unsafe {
                             // map
