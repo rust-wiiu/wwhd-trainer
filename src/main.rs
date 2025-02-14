@@ -80,16 +80,18 @@ fn overlay_thread() {
         vec![
             Button::new("Search", || unsafe {
                 println!("Start search");
-                let start = 0x1506_b000;
-                let to = start + 0x0000_1000;
+                // let start = 0x1098_9c00;
+                // let to = start + 0x0000_0001;
 
-                for (_i, x) in (start..=to).step_by(1).enumerate() {
-                    let ptr = x as *const u8;
-                    let value = core::ptr::read(ptr);
-                    if value == 21 || value == 22 || value == 23 {
-                        println!("ptr: {:#08x} - value: {}", ptr as usize, value);
-                    }
-                }
+                // // 0x1098_9c74
+
+                // for (_i, x) in (start..=to).step_by(1).enumerate() {
+                //     let ptr = x as *const f32;
+                //     let value = core::ptr::read(ptr);
+                //     if value > 16.9 && value < 17.1 {
+                //         println!("ptr: {:#08x} - value: {}", ptr as usize, value);
+                //     }
+                // }
 
                 println!("End search");
             }),
@@ -149,7 +151,25 @@ fn overlay_thread() {
             }),
             */
             Button::new("Test", || unsafe {
-                core::ptr::write(player::OVERWORLD_MAP, [2; 49]);
+                // let ptr = 0x1096ef48 as *mut f32; // X
+                // let value = core::ptr::read(ptr);
+                // println!("ptr: {:#08x} - value: {}", ptr as usize, value);
+
+                // let ptr = 0x1096ef4c as *mut f32; // Y (height)
+                // let value = core::ptr::read(ptr);
+                // println!("ptr: {:#08x} - value: {}", ptr as usize, value);
+
+                // let ptr = 0x1096ef50 as *mut f32; // Z
+                // let value = core::ptr::read(ptr);
+                // println!("ptr: {:#08x} - value: {}", ptr as usize, value);
+
+                // let ptr = 0x1096ef10 as *mut f32; // Angle?
+                // let value = core::ptr::read(ptr);
+                // println!("ptr: {:#08x} - value: {}", ptr as usize, value);
+
+                let ptr = 0x10989c70 as *mut [u8; 16]; // this if for sure not speed
+                let value = core::ptr::read(ptr);
+                println!("ptr: {:#08x} - value: {:?}", ptr as usize, value);
             }),
             Menu::new(
                 "Cheats",
