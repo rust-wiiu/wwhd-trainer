@@ -301,3 +301,23 @@ pub mod mailbag {
     pub const COMPLIMENTARY_ID: u8 = 0x9d;
     pub const FILL_UP_COUPON: u8 = 0x9e;
 }
+
+pub const DUNGEON_KEYS: Item = Item {
+    address: 0x1506bc98 as *mut u8,
+    value: 0x0a, // max (10) keys
+};
+
+pub const DUNGEON_MAP: Item = Item {
+    address: 0x1506bc99 as *mut u8,
+    value: 0b0000_0001,
+};
+
+pub const DUNGEON_COMPASS: Item = Item {
+    address: 0x1506bc99 as *mut u8,
+    value: 0b0000_0010,
+};
+
+pub const DUNGEON_BOSS_KEY: Item = Item {
+    address: 0x1506bc99 as *mut u8,
+    value: 0b0000_0100,
+};

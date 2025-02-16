@@ -208,8 +208,8 @@ fn overlay_thread() {
                 // let value = core::ptr::read(ptr);
                 // println!("ptr: {:#08x} - value: {:?}", ptr as usize, value);
 
-                // println!("{}", core::ptr::read(items::SWIFT_SAIL.address));
-                core::ptr::write(items::MAILBAG_1.address, 0x8c);
+                // println!("{}", core::ptr::read(items::DUNGEON_MAP.address));
+                core::ptr::write(items::DUNGEON_MAP.address, 0b0011_1000);
             }),
             Menu::new(
                 "Cheats",
@@ -580,6 +580,41 @@ fn overlay_thread() {
                             }),
                             Select::new("Item 8", mailbag_options.clone(), |_, v| unsafe {
                                 core::ptr::write(items::MAILBAG_8.address, v.value);
+                            }),
+                        ],
+                    ),
+                    Menu::new(
+                        "Dungeon",
+                        vec![
+                            Number::new("Dungeon Keys", 0, 1, 0, 10, |v| unsafe {
+                                core::ptr::write(items::DUNGEON_KEYS.address, *v);
+                            }),
+                            Toggle::new("Map", false, |v| unsafe {
+                                let x = core::ptr::read(items::DUNGEON_MAP.address);
+                                let x = if v {
+                                    x | items::DUNGEON_MAP.value
+                                } else {
+                                    x & !items::DUNGEON_MAP.value
+                                };
+                                core::ptr::write(items::DUNGEON_MAP.address, x);
+                            }),
+                            Toggle::new("Compass", false, |v| unsafe {
+                                let x = core::ptr::read(items::DUNGEON_COMPASS.address);
+                                let x = if v {
+                                    x | items::DUNGEON_COMPASS.value
+                                } else {
+                                    x & !items::DUNGEON_COMPASS.value
+                                };
+                                core::ptr::write(items::DUNGEON_COMPASS.address, x);
+                            }),
+                            Toggle::new("Boss Key", false, |v| unsafe {
+                                let x = core::ptr::read(items::DUNGEON_BOSS_KEY.address);
+                                let x = if v {
+                                    x | items::DUNGEON_BOSS_KEY.value
+                                } else {
+                                    x & !items::DUNGEON_BOSS_KEY.value
+                                };
+                                core::ptr::write(items::DUNGEON_BOSS_KEY.address, x);
                             }),
                         ],
                     ),
