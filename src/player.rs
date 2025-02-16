@@ -34,6 +34,21 @@ pub const BUTTON_Y: *mut u8 = 0x10976e6c as *mut u8;
 
 pub const BUTTON_R: *mut u8 = 0x10976e6d as *mut u8;
 
+// Location
+
+pub mod position {
+    pub const X: *mut f32 = 0x1096ef48 as *mut f32;
+
+    pub const Y: *mut f32 = 0x1096ef50 as *mut f32;
+
+    pub const Z: *mut f32 = 0x1096ef4c as *mut f32;
+
+    pub const ANGLE: *mut u32 = 0x1096ef10 as *mut u32;
+
+    // *(0x10989C74 as *mut f32) + 26936 (WWHD Trainer rewrite decompile)
+    pub const SPEED: *mut f32 = 0x486ff6d0 as *mut f32;
+}
+
 // 15, 07, 36, 94 - magic
 
 // 15, 07, 36, 83 - health

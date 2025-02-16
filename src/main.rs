@@ -117,18 +117,18 @@ fn overlay_thread() {
         vec![
             Button::new("Search", || unsafe {
                 println!("Start search");
-                // let start = 0x1098_9c00;
-                // let to = start + 0x0000_0001;
+                let start = 0x1000_0004;
+                let to = start + 0x0100_0000;
 
-                // // 0x1098_9c74
+                // 0x1098_9c74
 
-                // for (_i, x) in (start..=to).step_by(1).enumerate() {
-                //     let ptr = x as *const f32;
-                //     let value = core::ptr::read(ptr);
-                //     if value > 16.9 && value < 17.1 {
-                //         println!("ptr: {:#08x} - value: {}", ptr as usize, value);
-                //     }
-                // }
+                for (_i, x) in (start..=to).step_by(16).enumerate() {
+                    let ptr = x as *const f32;
+                    let value = core::ptr::read(ptr);
+                    if value > 17.9 && value < 18.1 {
+                        println!("ptr: {:#08x} - value: {}", ptr as usize, value);
+                    }
+                }
 
                 println!("End search");
             }),
@@ -200,16 +200,43 @@ fn overlay_thread() {
                 // let value = core::ptr::read(ptr);
                 // println!("ptr: {:#08x} - value: {}", ptr as usize, value);
 
-                // let ptr = 0x1096ef10 as *mut f32; // Angle?
+                // let ptr = 0x1096ef10 as *mut u32; // Angle
                 // let value = core::ptr::read(ptr);
                 // println!("ptr: {:#08x} - value: {}", ptr as usize, value);
 
-                // let ptr = 0x10989c70 as *mut [u8; 16]; // this if for sure not speed
+                let ptr = 0x10989C74 as *mut u32;
+                let value = core::ptr::read(ptr);
+                println!("ptr: {:#08x} - value: {:#08x?}", ptr as usize, value);
+
+                let ptr = 0x486F_F6D0 as *mut f32;
+                let value = core::ptr::read(ptr);
+                println!("ptr: {:#08x} - value: {:?}", ptr as usize, value);
+
+                // let ptr = 0x4870_0d98 as *mut f32;
                 // let value = core::ptr::read(ptr);
                 // println!("ptr: {:#08x} - value: {:?}", ptr as usize, value);
 
-                // println!("{}", core::ptr::read(items::DUNGEON_MAP.address));
-                core::ptr::write(items::DUNGEON_MAP.address, 0b0011_1000);
+                // let ptr = 0x4870_76D0 as *mut f32;
+                // let value = core::ptr::read(ptr);
+                // println!("ptr: {:#08x} - value: {:?}", ptr as usize, value);
+
+                // println!("{}", core::ptr::read(0x1506b59b as *mut u8));
+                // core::ptr::write(items::RED_JELLY.address, 99);
+            }),
+            Text::new(|| unsafe {
+                format!(
+                    "X: {}, Y: {}, Z: {}",
+                    core::ptr::read(player::position::X),
+                    core::ptr::read(player::position::Y),
+                    core::ptr::read(player::position::Z)
+                )
+            }),
+            Text::new(|| unsafe {
+                format!(
+                    "Speed: {}, Angle: {}",
+                    core::ptr::read(player::position::SPEED),
+                    core::ptr::read(player::position::ANGLE)
+                )
             }),
             Menu::new(
                 "Cheats",
@@ -618,6 +645,38 @@ fn overlay_thread() {
                             }),
                         ],
                     ),
+                    Menu::new("Spoils", {
+                        let value = 1;
+                        let inc = 10;
+                        let min = 0;
+                        let max = 99;
+                        vec![
+                            Number::new("Red Chu Jelly", value, inc, min, max, |v| unsafe {
+                                core::ptr::write(items::RED_JELLY.address, *v);
+                            }),
+                            Number::new("Green Chu Jelly", value, inc, min, max, |v| unsafe {
+                                core::ptr::write(items::GREEN_JELLY.address, *v);
+                            }),
+                            Number::new("Blue Chu Jelly", value, inc, min, max, |v| unsafe {
+                                core::ptr::write(items::BLUE_JELLY.address, *v);
+                            }),
+                            Number::new("Joy Pendant", value, inc, min, max, |v| unsafe {
+                                core::ptr::write(items::JOY_PENDANT.address, *v);
+                            }),
+                            Number::new("Boko Baba Seed", value, inc, min, max, |v| unsafe {
+                                core::ptr::write(items::BOKO_SEEDS.address, *v);
+                            }),
+                            Number::new("Golden Feather", value, inc, min, max, |v| unsafe {
+                                core::ptr::write(items::GOLDEN_FEATHERS.address, *v);
+                            }),
+                            Number::new("Skull Necklace", value, inc, min, max, |v| unsafe {
+                                core::ptr::write(items::SKULL_NECKLACES.address, *v);
+                            }),
+                            Number::new("Knight's Crest", value, inc, min, max, |v| unsafe {
+                                core::ptr::write(items::KNIGHT_CREST.address, *v);
+                            }),
+                        ]
+                    }),
                 ],
             ),
             Menu::new(
@@ -708,6 +767,28 @@ fn overlay_thread() {
                             core::ptr::read(layer)
                         )
                     }),
+                    Select::new(
+                        "Daytime",
+                        vec![
+                            ("Dawn", stages::daytime::DAWN),
+                            ("Day", stages::daytime::DAY),
+                            ("Night", stages::daytime::NIGHT),
+                        ],
+                        |_, v| unsafe {
+                            core::ptr::write(stages::daytime::ADDRESS, v.value);
+                        },
+                    ),
+                    Select::new(
+                        "Weather",
+                        vec![
+                            ("Normal", stages::weather::NORMAL),
+                            ("Cloudy", stages::weather::CLOUDY),
+                            ("Foggy", stages::weather::FOGGY),
+                        ],
+                        |_, v| unsafe {
+                            core::ptr::write(stages::weather::ADDRESS, v.value);
+                        },
+                    ),
                     Select::new(
                         "Great Sea",
                         vec![

@@ -772,3 +772,19 @@ pub fn value_to_name(value: [u8; 8]) -> String {
 
     name
 }
+
+pub mod daytime {
+    pub const ADDRESS: *mut u32 = 0x1506b524 as *mut u32;
+
+    pub const DAWN: u32 = 0x4300_0000;
+    pub const DAY: u32 = 0x4320_0000;
+    pub const NIGHT: u32 = 0x3f80_0000;
+}
+
+pub mod weather {
+    pub const ADDRESS: *mut u32 = 0x10978cf4 as *mut u32;
+
+    pub const NORMAL: u32 = 0x0000_ffff;
+    pub const CLOUDY: u32 = 0x0001_ffff;
+    pub const FOGGY: u32 = 0x0002_ffff;
+}

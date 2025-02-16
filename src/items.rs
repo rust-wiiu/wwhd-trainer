@@ -321,3 +321,45 @@ pub const DUNGEON_BOSS_KEY: Item = Item {
     address: 0x1506bc99 as *mut u8,
     value: 0b0000_0100,
 };
+
+// spoils
+
+pub const SKULL_NECKLACES: Item = Item {
+    address: 0x1506b59c as *mut u8,
+    value: 0,
+};
+
+pub const BOKO_SEEDS: Item = Item {
+    address: 0x1506b59d as *mut u8,
+    value: 0,
+};
+
+pub const GOLDEN_FEATHERS: Item = Item {
+    address: 0x1506b59e as *mut u8,
+    value: 0,
+};
+
+pub const KNIGHT_CREST: Item = Item {
+    address: 0x1506b59f as *mut u8,
+    value: 0,
+};
+
+pub const RED_JELLY: Item = Item {
+    address: 0x1506b5a0 as *mut u8,
+    value: 0,
+};
+
+pub const GREEN_JELLY: Item = Item {
+    address: 0x1506b5a1 as *mut u8,
+    value: 0,
+};
+
+pub const BLUE_JELLY: Item = Item {
+    address: 0x1506b5a2 as *mut u8,
+    value: 0,
+};
+
+pub const JOY_PENDANT: Item = Item {
+    address: 0x1506b5a3 as *mut u8,
+    value: 0,
+};
