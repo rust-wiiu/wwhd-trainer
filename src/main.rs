@@ -75,6 +75,43 @@ fn overlay_thread() {
 
     let cheats = Arc::new(Mutex::new(Cheats::default()));
 
+    let bottle_options = vec![
+        ("None", items::bottle::NONE),
+        ("Empty", items::bottle::EMPTY),
+        ("Red Elixir", items::bottle::RED_ELIXIR),
+        ("Green Elixir", items::bottle::GREEN_ELIXIR),
+        ("Blue Elixir", items::bottle::BLUE_ELIXIR),
+        ("Soup (Half)", items::bottle::SOUP_HALF),
+        ("Soup", items::bottle::SOUP),
+        ("Water", items::bottle::WATER),
+        ("Fairy", items::bottle::FAIRY),
+        ("Pollen", items::bottle::POLLEN),
+        ("Magic Water", items::bottle::MAGIC_WATER),
+    ];
+
+    let mailbag_options = vec![
+        ("None", items::mailbag::NONE),
+        ("Town Flower", items::mailbag::TOWN_FLOWER),
+        ("Sea Flower", items::mailbag::SEA_FLOWER),
+        ("Exotic Flower", items::mailbag::EXOTIC_FLOWER),
+        ("Hero's Flag", items::mailbag::HEROS_FLAG),
+        ("Big Catch Flag", items::mailbag::BIG_CATCH_FLAG),
+        ("Big Sale Flag", items::mailbag::BIG_SALE_FLAG),
+        ("Pinwheel", items::mailbag::PINWHEEL),
+        ("Sickle Moon Flag", items::mailbag::SICKLE_MOON_FLAG),
+        ("Skull Tower Idol", items::mailbag::SKULL_TOWER_IDOL),
+        ("Fountain Idol", items::mailbag::FOUNTAIN_IDOL),
+        ("Postman Statue", items::mailbag::POSTMAN_STATUE),
+        ("Shop Guru Statue", items::mailbag::SHOP_GURU_STATUE),
+        ("Father's Letter", items::mailbag::FATHERS_LETTER),
+        ("Note to Mom", items::mailbag::NOTE_TO_MOM),
+        ("Maggie's Letter", items::mailbag::MAGGIES_LETTER),
+        ("Moblin's Letter", items::mailbag::MOBLINS_LETTER),
+        ("Cabana Deed", items::mailbag::CABANA_DEED),
+        ("Complimentary ID", items::mailbag::COMPLIMENTARY_ID),
+        ("Fill-Up Coupon", items::mailbag::FILL_UP_COUPON),
+    ];
+
     let mut overlay = OverlayNotification::new(Menu::new(
         "Root",
         vec![
@@ -167,9 +204,12 @@ fn overlay_thread() {
                 // let value = core::ptr::read(ptr);
                 // println!("ptr: {:#08x} - value: {}", ptr as usize, value);
 
-                let ptr = 0x10989c70 as *mut [u8; 16]; // this if for sure not speed
-                let value = core::ptr::read(ptr);
-                println!("ptr: {:#08x} - value: {:?}", ptr as usize, value);
+                // let ptr = 0x10989c70 as *mut [u8; 16]; // this if for sure not speed
+                // let value = core::ptr::read(ptr);
+                // println!("ptr: {:#08x} - value: {:?}", ptr as usize, value);
+
+                // println!("{}", core::ptr::read(items::SWIFT_SAIL.address));
+                core::ptr::write(items::MAILBAG_1.address, 0x8c);
             }),
             Menu::new(
                 "Cheats",
@@ -392,80 +432,156 @@ fn overlay_thread() {
                         core::ptr::write(items::WIND_WAKER.address, v);
                     }),
                     Select::new(
-                        "Bottle 1",
+                        "Sail",
                         vec![
                             ("None", 0xff),
-                            ("Empty", 0x50),
-                            ("Red Elixir", 0x51),
-                            ("Green Elixir", 0x52),
-                            ("Blue Elixir", 0x53),
-                            ("Soup (Half)", 0x54),
-                            ("Soup", 0x55),
-                            ("Water", 0x56),
-                            ("Fairy", 0x57),
-                            ("Pollen", 0x58),
-                            ("Magic Water", 0x59),
+                            ("Normal", items::NORMAL_SAIL.value),
+                            ("Swift", items::SWIFT_SAIL.value),
                         ],
                         |_, v| unsafe {
-                            core::ptr::write(items::BOTTLE_1.address, v.value);
+                            core::ptr::write(items::NORMAL_SAIL.address, v.value);
                         },
                     ),
-                    Select::new(
-                        "Bottle 2",
+                    Menu::new(
+                        "Bottles",
                         vec![
-                            ("None", 0xff),
-                            ("Empty", 0x50),
-                            ("Red Elixir", 0x51),
-                            ("Green Elixir", 0x52),
-                            ("Blue Elixir", 0x53),
-                            ("Soup (Half)", 0x54),
-                            ("Soup", 0x55),
-                            ("Water", 0x56),
-                            ("Fairy", 0x57),
-                            ("Pollen", 0x58),
-                            ("Magic Water", 0x59),
+                            Select::new("Bottle 1", bottle_options.clone(), |_, v| unsafe {
+                                core::ptr::write(items::BOTTLE_1.address, v.value);
+                            }),
+                            Select::new("Bottle 2", bottle_options.clone(), |_, v| unsafe {
+                                core::ptr::write(items::BOTTLE_2.address, v.value);
+                            }),
+                            Select::new("Bottle 3", bottle_options.clone(), |_, v| unsafe {
+                                core::ptr::write(items::BOTTLE_3.address, v.value);
+                            }),
+                            Select::new("Bottle 4", bottle_options.clone(), |_, v| unsafe {
+                                core::ptr::write(items::BOTTLE_4.address, v.value);
+                            }),
                         ],
-                        |_, v| unsafe {
-                            core::ptr::write(items::BOTTLE_2.address, v.value);
-                        },
                     ),
-                    Select::new(
-                        "Bottle 3",
+                    Menu::new(
+                        "Songs",
                         vec![
-                            ("None", 0xff),
-                            ("Empty", 0x50),
-                            ("Red Elixir", 0x51),
-                            ("Green Elixir", 0x52),
-                            ("Blue Elixir", 0x53),
-                            ("Soup (Half)", 0x54),
-                            ("Soup", 0x55),
-                            ("Water", 0x56),
-                            ("Fairy", 0x57),
-                            ("Pollen", 0x58),
-                            ("Magic Water", 0x59),
+                            Toggle::new("Wind's Requiem", false, |v| unsafe {
+                                let x = core::ptr::read(items::WINDS_REQUIEM.address);
+                                let x = if v {
+                                    x | items::WINDS_REQUIEM.value
+                                } else {
+                                    x & !items::WINDS_REQUIEM.value
+                                };
+                                core::ptr::write(items::WINDS_REQUIEM.address, x);
+                            }),
+                            Toggle::new("Ballad of Gales", false, |v| unsafe {
+                                let x = core::ptr::read(items::BALLAD_OF_GALES.address);
+                                let x = if v {
+                                    x | items::BALLAD_OF_GALES.value
+                                } else {
+                                    x & !items::BALLAD_OF_GALES.value
+                                };
+                                core::ptr::write(items::BALLAD_OF_GALES.address, x);
+                            }),
+                            Toggle::new("Command Melody", false, |v| unsafe {
+                                let x = core::ptr::read(items::COMMAND_MELODY.address);
+                                let x = if v {
+                                    x | items::COMMAND_MELODY.value
+                                } else {
+                                    x & !items::COMMAND_MELODY.value
+                                };
+                                core::ptr::write(items::COMMAND_MELODY.address, x);
+                            }),
+                            Toggle::new("Earth God's Lyrics", false, |v| unsafe {
+                                let x = core::ptr::read(items::EARTH_GODS_LYRICS.address);
+                                let x = if v {
+                                    x | items::EARTH_GODS_LYRICS.value
+                                } else {
+                                    x & !items::EARTH_GODS_LYRICS.value
+                                };
+                                core::ptr::write(items::EARTH_GODS_LYRICS.address, x);
+                            }),
+                            Toggle::new("Wind God's Aria", false, |v| unsafe {
+                                let x = core::ptr::read(items::WIND_GODS_ARIA.address);
+                                let x = if v {
+                                    x | items::WIND_GODS_ARIA.value
+                                } else {
+                                    x & !items::WIND_GODS_ARIA.value
+                                };
+                                core::ptr::write(items::WIND_GODS_ARIA.address, x);
+                            }),
+                            Toggle::new("Song of Passing", false, |v| unsafe {
+                                let x = core::ptr::read(items::SONG_OF_PASSING.address);
+                                let x = if v {
+                                    x | items::SONG_OF_PASSING.value
+                                } else {
+                                    x & !items::SONG_OF_PASSING.value
+                                };
+                                core::ptr::write(items::SONG_OF_PASSING.address, x);
+                            }),
                         ],
-                        |_, v| unsafe {
-                            core::ptr::write(items::BOTTLE_3.address, v.value);
-                        },
                     ),
-                    Select::new(
-                        "Bottle 4",
+                    Number::new("Triforce", 0u8, 1, 0, 8, |v| unsafe {
+                        let x = if *v == 8 { 0xff } else { (1 << *v) - 1 };
+                        core::ptr::write(items::TRIFORCE.address, x);
+                    }),
+                    Menu::new(
+                        "Pearls",
                         vec![
-                            ("None", 0xff),
-                            ("Empty", 0x50),
-                            ("Red Elixir", 0x51),
-                            ("Green Elixir", 0x52),
-                            ("Blue Elixir", 0x53),
-                            ("Soup (Half)", 0x54),
-                            ("Soup", 0x55),
-                            ("Water", 0x56),
-                            ("Fairy", 0x57),
-                            ("Pollen", 0x58),
-                            ("Magic Water", 0x59),
+                            Toggle::new("Nayru's Pearl", false, |v| unsafe {
+                                let x = core::ptr::read(items::NAYRUS_PEARL.address);
+                                let x = if v {
+                                    x | items::NAYRUS_PEARL.value
+                                } else {
+                                    x & !items::NAYRUS_PEARL.value
+                                };
+                                core::ptr::write(items::NAYRUS_PEARL.address, x);
+                            }),
+                            Toggle::new("Din's Pearl", false, |v| unsafe {
+                                let x = core::ptr::read(items::DINS_PEARL.address);
+                                let x = if v {
+                                    x | items::DINS_PEARL.value
+                                } else {
+                                    x & !items::DINS_PEARL.value
+                                };
+                                core::ptr::write(items::DINS_PEARL.address, x);
+                            }),
+                            Toggle::new("Farore's Pearl", false, |v| unsafe {
+                                let x = core::ptr::read(items::FARORES_PEARL.address);
+                                let x = if v {
+                                    x | items::FARORES_PEARL.value
+                                } else {
+                                    x & !items::FARORES_PEARL.value
+                                };
+                                core::ptr::write(items::FARORES_PEARL.address, x);
+                            }),
                         ],
-                        |_, v| unsafe {
-                            core::ptr::write(items::BOTTLE_4.address, v.value);
-                        },
+                    ),
+                    Menu::new(
+                        "Mailbag",
+                        vec![
+                            Select::new("Item 1", mailbag_options.clone(), |_, v| unsafe {
+                                core::ptr::write(items::MAILBAG_1.address, v.value);
+                            }),
+                            Select::new("Item 2", mailbag_options.clone(), |_, v| unsafe {
+                                core::ptr::write(items::MAILBAG_2.address, v.value);
+                            }),
+                            Select::new("Item 3", mailbag_options.clone(), |_, v| unsafe {
+                                core::ptr::write(items::MAILBAG_3.address, v.value);
+                            }),
+                            Select::new("Item 4", mailbag_options.clone(), |_, v| unsafe {
+                                core::ptr::write(items::MAILBAG_4.address, v.value);
+                            }),
+                            Select::new("Item 5", mailbag_options.clone(), |_, v| unsafe {
+                                core::ptr::write(items::MAILBAG_5.address, v.value);
+                            }),
+                            Select::new("Item 6", mailbag_options.clone(), |_, v| unsafe {
+                                core::ptr::write(items::MAILBAG_6.address, v.value);
+                            }),
+                            Select::new("Item 7", mailbag_options.clone(), |_, v| unsafe {
+                                core::ptr::write(items::MAILBAG_7.address, v.value);
+                            }),
+                            Select::new("Item 8", mailbag_options.clone(), |_, v| unsafe {
+                                core::ptr::write(items::MAILBAG_8.address, v.value);
+                            }),
+                        ],
                     ),
                 ],
             ),
