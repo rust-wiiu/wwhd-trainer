@@ -1,5 +1,18 @@
 use wut::prelude::*;
 
+/// Set to 1 to reload stage.
+pub const RELOAD: *mut u8 = 0x109763fc as *mut u8;
+
+pub const STAGE_ID: *mut [u8; 8] = 0x109763f0 as *mut [u8; 8];
+
+pub const SPAWN_ID: *mut u8 = 0x109763f9 as *mut u8;
+
+pub const ROOM_ID: *mut u8 = 0x109763fa as *mut u8;
+
+pub const STAGE_LAYER: *mut u8 = 0x109763fb as *mut u8;
+
+// region: Stages
+
 pub struct Stage {
     pub name: &'static str,
     pub value: [u8; 8],
@@ -772,6 +785,8 @@ pub fn value_to_name(value: [u8; 8]) -> String {
 
     name
 }
+
+// endregion
 
 pub mod daytime {
     pub const ADDRESS: *mut u32 = 0x1506b524 as *mut u32;

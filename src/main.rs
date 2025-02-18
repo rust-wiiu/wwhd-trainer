@@ -124,6 +124,19 @@ impl SpeedPopup {
     }
 }
 
+#[derive(Debug, Default)]
+struct PositionRestore {
+    x: f32,
+    y: f32,
+    z: f32,
+}
+
+impl PositionRestore {
+    pub fn new() -> Arc<Mutex<PositionRestore>> {
+        Arc::new(Mutex::new(Self::default()))
+    }
+}
+
 fn overlay_thread() {
     let _ = logger::init(logger::Udp);
 
@@ -132,6 +145,8 @@ fn overlay_thread() {
     let cheats = Cheats::new();
 
     let mut speed_popup = SpeedPopup::new();
+
+    let pos_restore = PositionRestore::new();
 
     let bottle_options = vec![
         ("None", items::bottle::NONE),
@@ -246,40 +261,14 @@ fn overlay_thread() {
             }),
             */
             Button::new("Test", || unsafe {
-                // let ptr = 0x1096ef48 as *mut f32; // X
-                // let value = core::ptr::read(ptr);
-                // println!("ptr: {:#08x} - value: {}", ptr as usize, value);
-
-                // let ptr = 0x1096ef4c as *mut f32; // Y (height)
-                // let value = core::ptr::read(ptr);
-                // println!("ptr: {:#08x} - value: {}", ptr as usize, value);
-
-                // let ptr = 0x1096ef50 as *mut f32; // Z
-                // let value = core::ptr::read(ptr);
-                // println!("ptr: {:#08x} - value: {}", ptr as usize, value);
-
-                // let ptr = 0x1096ef10 as *mut u32; // Angle
-                // let value = core::ptr::read(ptr);
-                // println!("ptr: {:#08x} - value: {}", ptr as usize, value);
-
-                let ptr = 0x10989C74 as *mut u32;
-                let value = core::ptr::read(ptr);
-                println!("ptr: {:#08x} - value: {:#08x?}", ptr as usize, value);
-
-                let ptr = 0x486F_F6D0 as *mut f32;
+                let ptr = 0x10976ab4 as *mut usize;
                 let value = core::ptr::read(ptr);
                 println!("ptr: {:#08x} - value: {:?}", ptr as usize, value);
 
-                // let ptr = 0x4870_0d98 as *mut f32;
+                let ptr = (value + 0x340) as *mut u32;
                 // let value = core::ptr::read(ptr);
-                // println!("ptr: {:#08x} - value: {:?}", ptr as usize, value);
-
-                // let ptr = 0x4870_76D0 as *mut f32;
-                // let value = core::ptr::read(ptr);
-                // println!("ptr: {:#08x} - value: {:?}", ptr as usize, value);
-
-                // println!("{}", core::ptr::read(0x1506b59b as *mut u8));
-                // core::ptr::write(items::RED_JELLY.address, 99);
+                // println!("ptr: {:#010x} - value: {:#08x}", ptr as usize, value);
+                core::ptr::write(ptr, 0x4210_0000);
             }),
             Menu::new(
                 "Cheats",
@@ -320,6 +309,10 @@ fn overlay_thread() {
                             air.lock().unwrap().air = v;
                         }
                     }),
+                    Button::new("Complete Map", || unsafe {
+                        // this is a one-way for now / just don't save ^^
+                        core::ptr::write(player::OVERWORLD_MAP, [3; 49]);
+                    }),
                     Toggle::new("Super Swim", false, {
                         let super_swim = Arc::clone(&cheats);
                         move |v| {
@@ -338,9 +331,13 @@ fn overlay_thread() {
                             super_crouch.lock().unwrap().super_crouch = v;
                         }
                     }),
-                    Button::new("Complete Map", || unsafe {
-                        // this is a one-way for now / just don't save ^^
-                        core::ptr::write(player::OVERWORLD_MAP, [3; 49]);
+                    Button::new("Hover", || unsafe {
+                        let x = core::ptr::read(player::HOVER_PTR);
+                        let x = (x + player::HOVER_OFFSET) as *mut u32;
+                        println!("ptr: {:#08x}", x as usize);
+                        if wut::ptr::is_valid(x) {
+                            core::ptr::write(x, 0x4210_0000);
+                        }
                     }),
                 ],
             ),
@@ -819,6 +816,24 @@ fn overlay_thread() {
                             }
                         }
                     }),
+                    Button::new("Store position", {
+                        let pos = Arc::clone(&pos_restore);
+                        move || unsafe {
+                            let mut p = pos.lock().unwrap();
+                            p.x = core::ptr::read(player::position::X);
+                            p.y = core::ptr::read(player::position::Y);
+                            p.z = core::ptr::read(player::position::Z);
+                        }
+                    }),
+                    Button::new("Restore position", {
+                        let pos = Arc::clone(&pos_restore);
+                        move || unsafe {
+                            let p = pos.lock().unwrap();
+                            core::ptr::write(player::position::X, p.x);
+                            core::ptr::write(player::position::Y, p.y);
+                            core::ptr::write(player::position::Z, p.z);
+                        }
+                    }),
                 ],
             ),
             Menu::new(
@@ -837,6 +852,9 @@ fn overlay_thread() {
                             core::ptr::read(room),
                             core::ptr::read(layer)
                         )
+                    }),
+                    Button::new("Reload stage", || unsafe {
+                        core::ptr::write(stages::RELOAD, 1);
                     }),
                     Select::new(
                         "Daytime",
@@ -914,25 +932,11 @@ fn overlay_thread() {
                             "Five-Star Isles",
                         ],
                         |i, _| unsafe {
-                            // map
-                            let stage = 0x109763f0 as *mut [u8; 8];
-                            core::ptr::write(stage, *b"sea\0\0\0\0\0");
-
-                            // spawn ID
-                            let spawn = 0x109763f9 as *mut u8;
-                            core::ptr::write(spawn, 0);
-
-                            // room ID
-                            let room = 0x109763fa as *mut u8;
-                            core::ptr::write(room, i as u8 + 1);
-
-                            // layer ID
-                            let layer = 0x109763fb as *mut u8;
-                            core::ptr::write(layer, 0xff);
-
-                            // responsible for reload?
-                            let ptr = 0x109763fc as *mut u8;
-                            core::ptr::write(ptr, 0x01);
+                            core::ptr::write(stages::STAGE_ID, *b"sea\0\0\0\0\0");
+                            core::ptr::write(stages::SPAWN_ID, 0);
+                            core::ptr::write(stages::ROOM_ID, i as u8 + 1);
+                            core::ptr::write(stages::STAGE_LAYER, 0xff);
+                            core::ptr::write(stages::RELOAD, 0x01);
                         },
                     ),
                 ],

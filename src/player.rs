@@ -47,9 +47,11 @@ pub mod position {
 
     // *(0x10989C74 as *mut f32) + 26936 (WWHD Trainer rewrite decompile)
     pub const SPEED_PTR: *mut usize = 0x10989C74 as *mut usize;
-    pub const SPEED_OFFSET: usize = 26936;
-    // 0x486ff6d0
+    pub const SPEED_OFFSET: usize = 0x6938;
 }
+
+pub const HOVER_PTR: *mut usize = 0x10976ab4 as *mut usize;
+pub const HOVER_OFFSET: usize = 0x340;
 
 // 15, 07, 36, 94 - magic
 
@@ -69,13 +71,6 @@ pub mod position {
 // 00000003 00000001
 // 00000000 00000000
 // map
-
-// 09020000 102f48a8
-// 00000020 00000000
-// 30000000 10976ab4
-// 48700000 48800000
-// 00120340 42100000
-//
 
 //  09020000 102f48a8 // AND 102f48a8 & 0x20
 //  00000020 00000000
