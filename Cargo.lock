@@ -569,6 +569,7 @@ dependencies = [
 name = "wwhd-trainer"
 version = "0.3.0"
 dependencies = [
+ "notifications",
  "overlay",
  "wups",
  "wut",

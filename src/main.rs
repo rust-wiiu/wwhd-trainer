@@ -5,8 +5,12 @@ use wut::font::icons;
 use wut::prelude::*;
 use wut::*;
 
+use notifications;
 use overlay;
 use wups::*;
+
+use alloc::sync::Arc;
+use wut::sync::Mutex;
 
 mod items;
 mod player;
@@ -66,14 +70,68 @@ struct Cheats {
     super_crouch: bool,
 }
 
+impl Cheats {
+    pub fn new() -> Arc<Mutex<Self>> {
+        Arc::new(Mutex::new(Self::default()))
+    }
+}
+
+struct SpeedPopup {
+    popup: Arc<Mutex<Option<notifications::Notification>>>,
+    speed: f32,
+    angle: u32,
+}
+
+impl SpeedPopup {
+    pub fn new() -> Self {
+        Self {
+            popup: Arc::new(Mutex::new(None)),
+            speed: 0.0,
+            angle: 0,
+        }
+    }
+
+    pub fn popup(&self) -> Arc<Mutex<Option<notifications::Notification>>> {
+        Arc::clone(&self.popup)
+    }
+
+    pub fn render(&mut self) {
+        let p = self.popup();
+        if let Some(ref popup) = *p.lock().unwrap() {
+            let (s, a) = unsafe {
+                (
+                    {
+                        let x = player::position::SPEED_PTR;
+                        let x = core::ptr::read(x);
+                        let x = (x + player::position::SPEED_OFFSET) as *mut f32;
+
+                        if wut::ptr::is_valid(x) {
+                            core::ptr::read(x)
+                        } else {
+                            0.0
+                        }
+                    },
+                    core::ptr::read(player::position::ANGLE),
+                )
+            };
+
+            if s != self.speed || a != self.angle {
+                let _ = popup.text(&format!("Speed: {:.2}, Angle: {:5}", s, a));
+                self.speed = s;
+                self.angle = a;
+            }
+        };
+    }
+}
+
 fn overlay_thread() {
     let _ = logger::init(logger::Udp);
 
-    use alloc::sync::Arc;
     use overlay::*;
-    use wut::sync::Mutex;
 
-    let cheats = Arc::new(Mutex::new(Cheats::default()));
+    let cheats = Cheats::new();
+
+    let mut speed_popup = SpeedPopup::new();
 
     let bottle_options = vec![
         ("None", items::bottle::NONE),
@@ -222,21 +280,6 @@ fn overlay_thread() {
 
                 // println!("{}", core::ptr::read(0x1506b59b as *mut u8));
                 // core::ptr::write(items::RED_JELLY.address, 99);
-            }),
-            Text::new(|| unsafe {
-                format!(
-                    "X: {}, Y: {}, Z: {}",
-                    core::ptr::read(player::position::X),
-                    core::ptr::read(player::position::Y),
-                    core::ptr::read(player::position::Z)
-                )
-            }),
-            Text::new(|| unsafe {
-                format!(
-                    "Speed: {}, Angle: {}",
-                    core::ptr::read(player::position::SPEED),
-                    core::ptr::read(player::position::ANGLE)
-                )
             }),
             Menu::new(
                 "Cheats",
@@ -751,6 +794,34 @@ fn overlay_thread() {
                 ],
             ),
             Menu::new(
+                "Coordinates",
+                vec![
+                    Text::new(|| unsafe {
+                        format!(
+                            "X: {:.2}, Y: {:.2}, Z: {:.2}",
+                            core::ptr::read(player::position::X),
+                            core::ptr::read(player::position::Y),
+                            core::ptr::read(player::position::Z)
+                        )
+                    }),
+                    Toggle::new("Show Speed", false, {
+                        let popup = speed_popup.popup();
+                        move |v| {
+                            let mut p = popup.lock().unwrap();
+                            if v && p.is_none() {
+                                *p = Some(
+                                    notifications::dynamic("Speed: ..., Angle: ...")
+                                        .show()
+                                        .unwrap(),
+                                );
+                            } else {
+                                let _ = p.take();
+                            }
+                        }
+                    }),
+                ],
+            ),
+            Menu::new(
                 "Stage",
                 vec![
                     Text::new(|| unsafe {
@@ -879,6 +950,8 @@ fn overlay_thread() {
 
             overlay.run(input);
         }
+
+        speed_popup.render();
 
         unsafe {
             let cheats = cheats.lock().unwrap();

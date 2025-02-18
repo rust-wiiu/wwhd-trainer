@@ -46,7 +46,9 @@ pub mod position {
     pub const ANGLE: *mut u32 = 0x1096ef10 as *mut u32;
 
     // *(0x10989C74 as *mut f32) + 26936 (WWHD Trainer rewrite decompile)
-    pub const SPEED: *mut f32 = 0x486ff6d0 as *mut f32;
+    pub const SPEED_PTR: *mut usize = 0x10989C74 as *mut usize;
+    pub const SPEED_OFFSET: usize = 26936;
+    // 0x486ff6d0
 }
 
 // 15, 07, 36, 94 - magic

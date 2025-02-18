@@ -9,3 +9,4 @@ license = "GPL3"
 wut = { path = "../wut", version = "*" }
 wups = { path = "../wups", version = "*", features = ["panic_handler"] }
 overlay = { path = "../overlay", version = "*" }
+notifications = { path = "../notifications", version = "*" }
