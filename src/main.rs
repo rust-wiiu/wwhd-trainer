@@ -51,7 +51,6 @@ fn start() {
             thread::Builder::default()
                 .name("Overlay")
                 .attribute(thread::thread::ThreadAttribute::Cpu2)
-                .priority(30)
                 .spawn(overlay_thread)
                 .unwrap(),
         );
@@ -130,6 +129,15 @@ struct PositionRestore {
     y: f32,
     z: f32,
 }
+
+// Put off for now. Maybe something like this later.
+// struct Macro(Vec<wut::gamepad::GamepadState>);
+
+// impl Macro {
+//     pub fn new(inputs: impl Into<Vec<wut::gamepad::GamepadState>>) -> Self {
+//         Self(inputs.into())
+//     }
+// }
 
 impl PositionRestore {
     pub fn new() -> Arc<Mutex<PositionRestore>> {
@@ -334,9 +342,16 @@ fn overlay_thread() {
                     Button::new("Hover", || unsafe {
                         let x = core::ptr::read(player::HOVER_PTR);
                         let x = (x + player::HOVER_OFFSET) as *mut u32;
-                        println!("ptr: {:#08x}", x as usize);
+
                         if wut::ptr::is_valid(x) {
                             core::ptr::write(x, 0x4210_0000);
+
+                            let ptr = core::ptr::read(player::position::SPEED_PTR);
+                            let ptr = (ptr + player::position::SPEED_OFFSET) as *mut f32;
+
+                            if wut::ptr::is_valid(ptr) {
+                                core::ptr::write(ptr, 30.0 * INPUT.left_stick.unwrap().abs());
+                            }
                         }
                     }),
                 ],
@@ -945,6 +960,7 @@ fn overlay_thread() {
     ));
 
     let mut input = unsafe { INPUT };
+    let mut timer = wut::time::SystemTime::now();
 
     while thread::current().running() {
         // println!("thread: {}", time::DateTime::now());
@@ -987,9 +1003,9 @@ fn overlay_thread() {
             }
         }
 
-        unsafe {
-            wut::bindings::GX2WaitForFlip();
-        }
+        let wait = (1000.0 / 30.0 - timer.elapsed().unwrap().as_millis() as f32) as u64;
+        wut::thread::sleep(wut::time::Duration::from_millis(wait));
+        timer = wut::time::SystemTime::now();
     }
 
     logger::deinit();
