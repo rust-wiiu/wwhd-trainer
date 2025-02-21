@@ -37,3 +37,6 @@ While the "menu buttons" (`L + R`) are held, no button presses or holds are regi
 1. Install and configure the rust-wiiu dependencies (devkitPro & Rust)
 2. ```git clone rust-wiiu/wwhd-trainer```
 3. ```cargo make --profile release build```
+
+---
+If you use this project in your content (such as tutorials or streams), please consider including a link to either this repo ([https://github.com/rust-wiiu/wwhd-trainer](https://github.com/rust-wiiu/wwhd-trainer)) or the WWHD Speedrun Discord server ([https://discord.gg/35u82nGCdF](https://discord.gg/35u82nGCdF)) in the description. This will help others find the tool.
