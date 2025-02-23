@@ -9,12 +9,6 @@ The goal is to have a standalone (i.e. no PC required) trainer which can be cont
 
 If you are interested in WWHD speedrunning you might want to [join our Discord server](https://discord.gg/35u82nGCdF). Here you will find all resources about WWHD. You can also check out the [speedrun.com leaderboard](https://www.speedrun.com/twwhd).
 
-This plugin contains:
-- Health Cheats
-- Item Cheats
-- Stage Loader
-- Positional Viewer (TBD)
-
 # Install
 
 1. Copy `wwhd-trainer.wps` to the plugins folder of your Wii U SD card
