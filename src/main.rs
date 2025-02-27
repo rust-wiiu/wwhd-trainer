@@ -66,6 +66,25 @@ fn my_VPADRead(
     status
 }
 
+// static mut COUNTER: u32 = 0;
+
+// #[function_hook(module = GX2, function = GX2SwapScanBuffers)]
+// fn my_swapBuffers() {
+//     let _ = wut::logger::udp().unwrap();
+
+//     unsafe {
+//         COUNTER += 1;
+//         if COUNTER >= 30 {
+//             println!("{}", wut::time::DateTime::now());
+//             COUNTER = 0;
+//         }
+
+//         hooked();
+//     }
+
+//     wut::logger::deinit();
+// }
+
 #[on_initialize(Udp)]
 fn init() {
     WWHDMenu::init(PLUGIN_NAME).unwrap();
@@ -148,16 +167,12 @@ impl Cheats {
 
 struct SpeedPopup {
     popup: Arc<Mutex<Option<notifications::Notification>>>,
-    speed: f32,
-    angle: u32,
 }
 
 impl SpeedPopup {
     pub fn new() -> Self {
         Self {
             popup: Arc::new(Mutex::new(None)),
-            speed: 0.0,
-            angle: 0,
         }
     }
 
@@ -168,7 +183,7 @@ impl SpeedPopup {
     pub fn render(&mut self) {
         let p = self.popup();
         if let Some(ref popup) = *p.lock().unwrap() {
-            let (s, a) = unsafe {
+            let (speed, facing_angle, speed_angle) = unsafe {
                 (
                     {
                         let x = player::position::SPEED_PTR;
@@ -181,15 +196,15 @@ impl SpeedPopup {
                             0.0
                         }
                     },
-                    core::ptr::read(player::position::ANGLE),
+                    core::ptr::read(player::position::FACING_ANGLE),
+                    core::ptr::read(player::position::SPEED_ANGLE),
                 )
             };
 
-            if s != self.speed || a != self.angle {
-                let _ = popup.text(&format!("Speed: {:.2}, Angle: {:5}", s, a));
-                self.speed = s;
-                self.angle = a;
-            }
+            let _ = popup.text(&format!(
+                "Speed: {:.2}, Facing Angle: {:5}, Speed Angle: {:5}",
+                speed, facing_angle, speed_angle
+            ));
         };
     }
 }
@@ -340,14 +355,14 @@ fn overlay_thread() {
             }),
             */
             Button::new("Test", || unsafe {
-                let ptr = 0x10976ab4 as *mut usize;
+                let ptr = 0x1096_EF0A as *mut u16;
                 let value = core::ptr::read(ptr);
                 println!("ptr: {:#08x} - value: {:?}", ptr as usize, value);
 
-                let ptr = (value + 0x340) as *mut u32;
+                // let ptr = (value + 0x340) as *mut u32;
                 // let value = core::ptr::read(ptr);
                 // println!("ptr: {:#010x} - value: {:#08x}", ptr as usize, value);
-                core::ptr::write(ptr, 0x4210_0000);
+                // core::ptr::write(ptr, 0x4210_0000);
             }),
             Menu::new(
                 "Cheats",
@@ -427,6 +442,13 @@ fn overlay_thread() {
 
                             if wut::ptr::is_valid(ptr) {
                                 core::ptr::write(ptr, 30.0 * INPUT.left_stick.unwrap().abs());
+
+                                if let Some(angle) = INPUT.left_stick.unwrap().angle() {
+                                    core::ptr::write(
+                                        player::position::SPEED_ANGLE,
+                                        core::ptr::read(player::position::FACING_ANGLE) + angle,
+                                    );
+                                }
                             }
                         }
                     }),

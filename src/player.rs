@@ -43,7 +43,9 @@ pub mod position {
 
     pub const Z: *mut f32 = 0x1096ef4c as *mut f32;
 
-    pub const ANGLE: *mut u32 = 0x1096ef10 as *mut u32;
+    pub const FACING_ANGLE: *mut u16 = 0x1096ef12 as *mut u16;
+
+    pub const SPEED_ANGLE: *mut u16 = 0x1096ef0a as *mut u16;
 
     // *(0x10989C74 as *mut f32) + 26936 (WWHD Trainer rewrite decompile)
     pub const SPEED_PTR: *mut usize = 0x10989C74 as *mut usize;
