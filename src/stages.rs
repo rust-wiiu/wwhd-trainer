@@ -318,7 +318,7 @@ pub const FORBIDDEN_WOODS_BOSS_ROOM: Stage = Stage {
     value: *b"kinBOSS\0",
 };
 
-pub const FORBIDDEN_WOODSE: Stage = Stage {
+pub const FORBIDDEN_WOODS: Stage = Stage {
     name: "Forbidden Woods",
     value: *b"kindan\0\0",
 };
@@ -694,7 +694,7 @@ pub const STAGES: [Stage; 123] = [
     WIND_TEMPLE_MINIBOSS_ROOM,
     HYRULE_CASTLE_BASEMENT,
     FORBIDDEN_WOODS_BOSS_ROOM,
-    FORBIDDEN_WOODSE,
+    FORBIDDEN_WOODS,
     FORBIDDEN_WOODS_MINIBOSS_ROOM,
     OUTSET_ISLAND_LINKS_HOUSE,
     OUTSET_ISLAND_BASEMENT,

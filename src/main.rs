@@ -7,6 +7,7 @@ use wut::*;
 
 use notifications;
 use overlay;
+use wups::config::{Attachable, ConfigMenu};
 use wups::*;
 
 use alloc::sync::Arc;
@@ -14,12 +15,34 @@ use wut::sync::Mutex;
 
 mod items;
 mod player;
+mod settings;
 mod stages;
 
 WUPS_PLUGIN_NAME!("WWHD Trainer");
 
+const WWHD_EUR: u64 = 0x00050000_10143600;
+const WWHD_USA: u64 = 0x00050000_10143500;
+const WWHD_JPN: u64 = 0x00050000_10143400;
+
 static HANDLE: sync::RwLock<Option<thread::JoinHandle>> = sync::RwLock::new(None);
 static mut INPUT: gamepad::GamepadState = gamepad::GamepadState::empty();
+
+struct WWHDMenu;
+impl wups::config::ConfigMenu for WWHDMenu {
+    fn open(root: wups::config::MenuRoot) -> Result<(), wups::config::MenuError> {
+        use wups::config::Toggle;
+
+        root.add(Toggle::new(
+            "Enabled",
+            settings::PLUGIN_ACTIVE,
+            false,
+            "Yes",
+            "No",
+        ))?;
+
+        Ok(())
+    }
+}
 
 #[function_hook(module = VPAD, function = VPADRead)]
 fn my_VPADRead(
@@ -43,17 +66,35 @@ fn my_VPADRead(
     status
 }
 
+#[on_initialize(Udp)]
+fn init() {
+    WWHDMenu::init(PLUGIN_NAME).unwrap();
+}
+
 #[on_application_start(Udp)]
 fn start() {
-    let mut thread = HANDLE.write();
-    if thread.is_none() {
-        *thread = Some(
-            thread::Builder::default()
-                .name("Overlay")
-                .attribute(thread::thread::ThreadAttribute::Cpu2)
-                .spawn(overlay_thread)
-                .unwrap(),
-        );
+    let title = wut::title::current_title();
+    let is_wwhd = title == WWHD_EUR || title == WWHD_USA || title == WWHD_JPN;
+
+    if !is_wwhd {
+        return;
+    }
+
+    if let Ok(enabled) = wups::storage::load::<bool>(settings::PLUGIN_ACTIVE) {
+        if enabled {
+            let mut thread = HANDLE.write();
+            if thread.is_none() {
+                *thread = Some(
+                    thread::Builder::default()
+                        .name("Overlay")
+                        .attribute(thread::thread::ThreadAttribute::Cpu2)
+                        .spawn(overlay_thread)
+                        .unwrap(),
+                );
+            }
+
+            let _ = notifications::info("WWHD Trainer started").show().unwrap();
+        }
     }
 }
 
@@ -72,6 +113,36 @@ struct Cheats {
 impl Cheats {
     pub fn new() -> Arc<Mutex<Self>> {
         Arc::new(Mutex::new(Self::default()))
+    }
+
+    pub fn run(&self) {
+        unsafe {
+            if self.health {
+                core::ptr::write(player::HEALTH, 80);
+            }
+            if self.magic {
+                core::ptr::write(player::MAGIC, 32);
+            }
+            if self.rupees {
+                core::ptr::write(player::RUPEES, 5000);
+            }
+            if self.arrows {
+                core::ptr::write(player::ARROWS, 99);
+            }
+            if self.bombs {
+                core::ptr::write(player::BOMBS, 99);
+            }
+            if self.air {
+                core::ptr::write(player::AIR, 900);
+            }
+            if self.super_swim {
+                // kinda magic and not the same as "normal" superswims
+                core::ptr::write(player::AIR as *mut u32, 0xdff);
+            }
+            if self.super_crouch {
+                core::ptr::write(player::SUPER_CROUCH, 0x41f00000);
+            }
+        }
     }
 }
 
@@ -324,6 +395,11 @@ fn overlay_thread() {
                     Toggle::new("Super Swim", false, {
                         let super_swim = Arc::clone(&cheats);
                         move |v| {
+                            if !v {
+                                unsafe {
+                                    core::ptr::write(player::AIR as *mut u32, 800);
+                                }
+                            }
                             super_swim.lock().unwrap().super_swim = v;
                         }
                     }),
@@ -954,6 +1030,40 @@ fn overlay_thread() {
                             core::ptr::write(stages::RELOAD, 0x01);
                         },
                     ),
+                    Select::new(
+                        "Dungeon",
+                        vec![
+                            (
+                                "Forsaken Fortress 1",
+                                (stages::FORSAKEN_FORTRESS_EXTERIOR.value, 2, 0, 255),
+                            ), // not actually
+                            (
+                                "Dragon Roost Cavern",
+                                (stages::DRAGON_ROOST_CAVEN.value, 0, 0, 255),
+                            ),
+                            (
+                                "Forbidden Woods",
+                                (stages::FORBIDDEN_WOODS.value, 0, 0, 255),
+                            ),
+                            (
+                                "Tower of the Gods",
+                                (stages::TOWER_OF_GODS.value, 0, 0, 255),
+                            ),
+                            ("Earth Temple", (stages::EARTH_TEMPLE.value, 0, 0, 255)),
+                            ("Wind Temple", (stages::WIND_TEMPLE.value, 0, 0, 255)),
+                            (
+                                "Ganon's Tower",
+                                (stages::GANONS_TOWER_ENTRANCE.value, 0, 0, 255),
+                            ),
+                        ],
+                        |_, v| unsafe {
+                            core::ptr::write(stages::STAGE_ID, v.value.0);
+                            core::ptr::write(stages::SPAWN_ID, v.value.1);
+                            core::ptr::write(stages::ROOM_ID, v.value.2);
+                            core::ptr::write(stages::STAGE_LAYER, v.value.3);
+                            core::ptr::write(stages::RELOAD, 0x01);
+                        },
+                    ),
                 ],
             ),
         ],
@@ -963,8 +1073,6 @@ fn overlay_thread() {
     let mut timer = wut::time::SystemTime::now();
 
     while thread::current().running() {
-        // println!("thread: {}", time::DateTime::now());
-
         if input != unsafe { INPUT } {
             input = unsafe { INPUT };
 
@@ -973,35 +1081,7 @@ fn overlay_thread() {
 
         speed_popup.render();
 
-        unsafe {
-            let cheats = cheats.lock().unwrap();
-
-            if cheats.health {
-                core::ptr::write(player::HEALTH, 80);
-            }
-            if cheats.magic {
-                core::ptr::write(player::MAGIC, 32);
-            }
-            if cheats.rupees {
-                core::ptr::write(player::RUPEES, 5000);
-            }
-            if cheats.arrows {
-                core::ptr::write(player::ARROWS, 99);
-            }
-            if cheats.bombs {
-                core::ptr::write(player::BOMBS, 99);
-            }
-            if cheats.air {
-                core::ptr::write(player::AIR, 900);
-            }
-            if cheats.super_swim {
-                // kinda magic and not the same as "normal" superswims
-                core::ptr::write(player::AIR as *mut u32, 0xdff);
-            }
-            if cheats.super_crouch {
-                core::ptr::write(player::SUPER_CROUCH, 0x41f00000);
-            }
-        }
+        cheats.lock().unwrap().run();
 
         let wait = (1000.0 / 30.0 - timer.elapsed().unwrap().as_millis() as f32) as u64;
         wut::thread::sleep(wut::time::Duration::from_millis(wait));
