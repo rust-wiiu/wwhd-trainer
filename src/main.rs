@@ -14,6 +14,7 @@ use alloc::sync::Arc;
 use wut::sync::Mutex;
 
 mod items;
+mod misc;
 mod player;
 mod settings;
 mod stages;
@@ -53,37 +54,60 @@ fn my_VPADRead(
 ) -> i32 {
     let status = unsafe { hooked(chan, buffers, count, error) };
 
-    use gamepad::Button as B;
     unsafe {
-        INPUT = gamepad::GamepadState::from(*buffers);
+        {
+            use wut::gamepad::Button as B;
+            INPUT = gamepad::GamepadState::from(*buffers);
 
-        if INPUT.hold.contains(B::L | B::R) {
-            (*buffers).hold = 0;
-            (*buffers).trigger = 0;
+            if INPUT.hold.contains(B::L | B::R) {
+                (*buffers).hold = 0;
+                (*buffers).trigger = 0;
+                (*buffers).release = 0;
+            }
+        }
+
+        {
+            use wut::bindings::{VPADButtons as B, VPADVec2D as S};
+            if MSS_ENABLED {
+                if FRAME_COUNT % 2 == 0 {
+                    (*buffers).leftStick = S { x: 0.0, y: 1.0 };
+                } else if FRAME_COUNT % 2 == 1 {
+                    (*buffers).leftStick = S { x: 0.0, y: -1.0 };
+                }
+            }
+            // (*buffers).hold |= B::VPAD_BUTTON_ZL;
         }
     }
 
     status
 }
 
-// static mut COUNTER: u32 = 0;
+static mut FRAME_COUNT: usize = 0;
+static mut MSS_ENABLED: bool = false;
 
-// #[function_hook(module = GX2, function = GX2SwapScanBuffers)]
-// fn my_swapBuffers() {
-//     let _ = wut::logger::udp().unwrap();
+#[function_hook(module = GX2, function = GX2SwapScanBuffers)]
+fn my_swapBuffers() {
+    // let _ = wut::logger::udp().unwrap();
 
-//     unsafe {
-//         COUNTER += 1;
-//         if COUNTER >= 30 {
-//             println!("{}", wut::time::DateTime::now());
-//             COUNTER = 0;
-//         }
+    unsafe {
+        // if ACTIVE {
+        //     NEW_FRAME = true;
+        //     FRAME_INDEX += 1;
+        // } else {
+        //     FRAME_INDEX = 0;
+        // }
+        // if FRAME_COUNTER >= 30 {
+        //     println!("{}", wut::time::DateTime::now());
+        //     FRAME_COUNTER = 0;
+        // }
 
-//         hooked();
-//     }
+        FRAME_COUNT += 1;
 
-//     wut::logger::deinit();
-// }
+        hooked();
+    }
+
+    // wut::logger::deinit();
+}
 
 #[on_initialize(Udp)]
 fn init() {
@@ -232,7 +256,7 @@ impl PositionRestore {
 }
 
 fn overlay_thread() {
-    let _ = logger::init(logger::Udp);
+    let _ = logger::udp().unwrap();
 
     use overlay::*;
 
@@ -283,21 +307,25 @@ fn overlay_thread() {
         "Root",
         vec![
             Button::new("Search", || unsafe {
-                println!("Start search");
-                let start = 0x1000_0004;
-                let to = start + 0x0100_0000;
+                // println!("Start search");
+                // let start = 0x1000_0004;
+                // let to = start + 0x0100_0000;
 
-                // 0x1098_9c74
+                // // 0x1098_9c74
 
-                for (_i, x) in (start..=to).step_by(16).enumerate() {
-                    let ptr = x as *const f32;
-                    let value = core::ptr::read(ptr);
-                    if value > 17.9 && value < 18.1 {
-                        println!("ptr: {:#08x} - value: {}", ptr as usize, value);
-                    }
-                }
+                // for (_i, x) in (start..=to).step_by(16).enumerate() {
+                //     let ptr = x as *const f32;
+                //     let value = core::ptr::read(ptr);
+                //     if value > 17.9 && value < 18.1 {
+                //         println!("ptr: {:#08x} - value: {}", ptr as usize, value);
+                //     }
+                // }
 
-                println!("End search");
+                // println!("End search");
+
+                let ptr = 0x17f4_63bc as *mut u8;
+                let value = core::ptr::write(ptr, 1);
+                // println!("{:x?}", &value);
             }),
             /*
             Button::new("Speed", || unsafe {
@@ -355,14 +383,23 @@ fn overlay_thread() {
             }),
             */
             Button::new("Test", || unsafe {
-                let ptr = 0x1096_EF0A as *mut u16;
-                let value = core::ptr::read(ptr);
-                println!("ptr: {:#08x} - value: {:?}", ptr as usize, value);
+                // let ptr = 0x1097_6543 as *mut u8;
+                // let ptr = (core::ptr::read(ptr) + 2060 + 40) as *mut u32;
+
+                // if wut::ptr::is_valid(ptr) {
+                //     let value = core::ptr::read(ptr) | 0x4004;
+                //     println!("ptr: {:#08x} - value: {:?}", ptr as usize, value);
+                //     core::ptr::write(ptr, value);
+                // }
+
+                // let value = core::ptr::read(ptr);
+                // println!("ptr: {:#08x} - value: {:?}", ptr as usize, value);
 
                 // let ptr = (value + 0x340) as *mut u32;
                 // let value = core::ptr::read(ptr);
                 // println!("ptr: {:#010x} - value: {:#08x}", ptr as usize, value);
-                // core::ptr::write(ptr, 0x4210_0000);
+                // core::ptr::write(ptr, 1);
+                // MSS_ENABLED = !MSS_ENABLED;
             }),
             Menu::new(
                 "Cheats",
@@ -950,6 +987,45 @@ fn overlay_thread() {
                 ],
             ),
             Menu::new(
+                "Storage",
+                vec![
+                    // Button::new("Soft Reset", || unsafe {
+                    //     core::ptr::write(misc::SOFT_RESET, 1);
+                    // }),
+                    Toggle::new("Storage", false, |v| unsafe {
+                        core::ptr::write(misc::STORAGE, if v { 1 } else { 0 });
+                    }),
+                    Toggle::new("Chest Storage", false, |v| unsafe {
+                        let ptr =
+                            (core::ptr::read(misc::LINK_PTR) + misc::COLLISION_OFFSET) as *mut u32;
+
+                        if wut::ptr::is_valid(ptr) {
+                            if v {
+                                let value = core::ptr::read(ptr) | 0x4;
+                                core::ptr::write(ptr, value);
+                            } else {
+                                let value = core::ptr::read(ptr) & !0x4;
+                                core::ptr::write(ptr, value);
+                            }
+                        }
+                    }),
+                    Toggle::new("Door Cancel", false, |v| unsafe {
+                        let ptr =
+                            (core::ptr::read(misc::LINK_PTR) + misc::COLLISION_OFFSET) as *mut u32;
+
+                        if wut::ptr::is_valid(ptr) {
+                            if v {
+                                let value = core::ptr::read(ptr) | 0x4004;
+                                core::ptr::write(ptr, value);
+                            } else {
+                                let value = core::ptr::read(ptr) & !0x4004;
+                                core::ptr::write(ptr, value);
+                            }
+                        }
+                    }),
+                ],
+            ),
+            Menu::new(
                 "Stage",
                 vec![
                     Text::new(|| unsafe {
@@ -966,31 +1042,6 @@ fn overlay_thread() {
                             core::ptr::read(layer)
                         )
                     }),
-                    Button::new("Reload stage", || unsafe {
-                        core::ptr::write(stages::RELOAD, 1);
-                    }),
-                    Select::new(
-                        "Daytime",
-                        vec![
-                            ("Dawn", stages::daytime::DAWN),
-                            ("Day", stages::daytime::DAY),
-                            ("Night", stages::daytime::NIGHT),
-                        ],
-                        |_, v| unsafe {
-                            core::ptr::write(stages::daytime::ADDRESS, v.value);
-                        },
-                    ),
-                    Select::new(
-                        "Weather",
-                        vec![
-                            ("Normal", stages::weather::NORMAL),
-                            ("Cloudy", stages::weather::CLOUDY),
-                            ("Foggy", stages::weather::FOGGY),
-                        ],
-                        |_, v| unsafe {
-                            core::ptr::write(stages::weather::ADDRESS, v.value);
-                        },
-                    ),
                     Select::new(
                         "Great Sea",
                         vec![
@@ -1086,7 +1137,38 @@ fn overlay_thread() {
                             core::ptr::write(stages::RELOAD, 0x01);
                         },
                     ),
+                    Button::new("Reload stage", || unsafe {
+                        core::ptr::write(stages::RELOAD, 1);
+                    }),
+                    Select::new(
+                        "Daytime",
+                        vec![
+                            ("Dawn", stages::daytime::DAWN),
+                            ("Day", stages::daytime::DAY),
+                            ("Night", stages::daytime::NIGHT),
+                        ],
+                        |_, v| unsafe {
+                            core::ptr::write(stages::daytime::ADDRESS, v.value);
+                        },
+                    ),
+                    Select::new(
+                        "Weather",
+                        vec![
+                            ("Normal", stages::weather::NORMAL),
+                            ("Cloudy", stages::weather::CLOUDY),
+                            ("Foggy", stages::weather::FOGGY),
+                        ],
+                        |_, v| unsafe {
+                            core::ptr::write(stages::weather::ADDRESS, v.value);
+                        },
+                    ),
                 ],
+            ),
+            Menu::new(
+                "Macros",
+                vec![Toggle::new("MSS", false, |v| unsafe {
+                    MSS_ENABLED = v;
+                })],
             ),
         ],
     ));
