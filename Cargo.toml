@@ -7,6 +7,6 @@ license = "GPL3"
 
 [dependencies]
 wut = { path = "../wut", version = "*" }
-wups = { path = "../wups", version = "*", features = ["panic_handler"] }
+wups = { path = "../wups", version = "*" }
 overlay = { path = "../overlay", version = "*" }
 notifications = { path = "../notifications", version = "*" }

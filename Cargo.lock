@@ -376,6 +376,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "sys"
+version = "0.1.0"
+dependencies = [
+ "bindgen 0.71.1",
+]
+
+[[package]]
 name = "thiserror"
 version = "2.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -557,9 +564,9 @@ dependencies = [
 name = "wut"
 version = "0.1.0"
 dependencies = [
- "bindgen 0.70.1",
  "flagset",
  "math",
+ "sys",
  "thiserror",
  "wut-macros",
 ]

@@ -3,27 +3,30 @@
 
 use core::sync::atomic::{AtomicUsize, Ordering};
 
-use wut::font::icons;
+use wut::{font::icons, gamepad::GamepadState};
 use wut::prelude::*;
 use wut::*;
 
 use notifications;
 use overlay;
-use wups::config::{Attachable, ConfigMenu};
 use wups::*;
 
 use alloc::sync::Arc;
-use wut::sync::Mutex;
+use wut::sync::{Mutex, LazyLock};
 
 mod items;
 mod misc;
 mod player;
-mod settings;
 mod stages;
 
-// remove the static mut and move to save code
-
 WUPS_PLUGIN_NAME!("WWHD Trainer");
+
+static HANDLE: LazyLock<Mutex<Option<thread::JoinHandle>>> = LazyLock::new(|| Mutex::new(None));
+
+static INPUT: LazyLock<Mutex<gamepad::GamepadState>> = LazyLock::new(|| Mutex::new(GamepadState::new()));
+
+static FRAME_LIMITER: sync::LazyLock<sync::AutoEvent> =
+    sync::LazyLock::new(|| sync::AutoEvent::new());
 
 /// Check if current title is Wind Waker
 fn title_is_windwaker() -> bool {
@@ -39,28 +42,6 @@ fn title_is_windwaker() -> bool {
     VALID_TITLE_IDS.iter().any(|&id| id == title)
 }
 
-static HANDLE: sync::RwLock<Option<thread::JoinHandle>> = sync::RwLock::new(None);
-// static mut INPUT: gamepad::GamepadState = gamepad::GamepadState::new();
-
-static INPUT: sync::RwLock<gamepad::GamepadState> = sync::RwLock::new(gamepad::GamepadState::new());
-
-struct WWHDMenu;
-impl wups::config::ConfigMenu for WWHDMenu {
-    fn open(root: wups::config::MenuRoot) -> Result<(), wups::config::MenuError> {
-        use wups::config::Toggle;
-
-        root.add(Toggle::new(
-            "Enabled",
-            settings::PLUGIN_ACTIVE,
-            false,
-            "Yes",
-            "No",
-        ))?;
-
-        Ok(())
-    }
-}
-
 #[function_hook(module = VPAD, function = VPADRead)]
 fn my_VPADRead(
     chan: wut::bindings::VPADChan::Type,
@@ -68,6 +49,12 @@ fn my_VPADRead(
     count: u32,
     error: *mut wut::bindings::VPADReadError::Type,
 ) -> i32 {
+    // unsafe {
+    //     if PAUSE_ENABLED {
+    //         (*buffers).trigger |= wut::bindings::VPADButtons::VPAD_BUTTON_HOME;
+    //     }
+    // }
+
     let status = unsafe { hooked(chan, buffers, count, error) };
 
     if status != 0 {
@@ -75,7 +62,7 @@ fn my_VPADRead(
 
         let mut input = unsafe { gamepad::GamepadState::from(*buffers) };
 
-        *INPUT.write() = input;
+        *INPUT.lock().unwrap() = input;
 
         if input.hold.contains(Button::L | Button::R) {
             input.hold = Button::none();
@@ -88,11 +75,15 @@ fn my_VPADRead(
         let counter = FRAME_COUNTER.load(Ordering::Relaxed);
 
         if unsafe { MSS_ENABLED } {
-            input.left_stick = if counter % 2 == 0 {
-                Some(Joystick::new(0.0, 1.0))
-            } else {
-                Some(Joystick::new(0.0, -1.0))
-            };
+            // input.left_stick = if counter % 2 == 0 {
+            //     Some(Joystick::new(0.0, 1.0))
+            // } else {
+            //     Some(Joystick::new(0.0, -1.0))
+            // };
+            // unsafe {
+            //     *buffers &= MSS[counter % 2];
+            // }
+            input |= MSS[counter % 2];
         }
         if unsafe { ZOMBIE_ENABLED } {
             if counter % 2 == 0 {
@@ -105,6 +96,7 @@ fn my_VPADRead(
             input.left_stick = Some(Joystick::new(1.0, 0.0));
             unsafe {
                 PAUSE_ENABLED = false;
+                foreground::home_menu();
             }
         }
 
@@ -115,62 +107,34 @@ fn my_VPADRead(
         }
     }
 
-    /*
-    wut::logger::udp();
-
-    use wut::gamepad::{Button, Joystick};
-
-    unsafe {
-        {
-            {
-                // let input = INPUT.read();
-                // *input = gamepad::GamepadState::from(*buffers);
-                *INPUT.read() = gamepad::GamepadState::from(*buffers);
-            }
-
-            if INPUT.hold.contains(Button::L | Button::R) {
-                (*buffers).hold = 0;
-                (*buffers).trigger = 0;
-                (*buffers).release = 0;
-            }
-        }
-
-        {
-            let counter = FRAME_COUNTER.load(Ordering::Relaxed);
-
-            if MSS_ENABLED {
-                (*buffers).leftStick = if counter % 2 == 0 {
-                    Joystick::new(0.0, 1.0).into()
-                } else {
-                    Joystick::new(0.0, -1.0).into()
-                };
-            }
-            if ZOMBIE_ENABLED {
-                if counter % 2 == 0 {
-                    (*buffers).hold |= Button::into_vpad(Button::B | Button::A);
-                }
-            }
-            if PAUSE_ENABLED {
-                (*buffers).hold = Button::into_vpad(Button::A | Button::ZL);
-                (*buffers).trigger |= Button::into_vpad(Button::Home);
-                (*buffers).leftStick = Joystick::new(1.0, 0.0).into();
-                PAUSE_ENABLED = false;
-
-                println!("{:?}", gamepad::GamepadState::from(*buffers));
-            }
-            // (*buffers).hold |= B::VPAD_BUTTON_ZL;
-        }
-    }
-
-    wut::logger::deinit();
-    */
-
     status
 }
 
 static mut MSS_ENABLED: bool = false;
 static mut ZOMBIE_ENABLED: bool = false;
 static mut PAUSE_ENABLED: bool = false;
+
+static MSS: sync::LazyLock<Vec<wut::gamepad::GamepadState>> = sync::LazyLock::new(|| {
+    use wut::gamepad::*;
+    vec![
+        GamepadState {
+            hold: Button::none(),
+            trigger: Button::none(),
+            release: Button::none(),
+            left_stick: Some(Joystick::new(0.0, 1.0)),
+            right_stick: None,
+        },
+        GamepadState {
+            hold: Button::none(),
+            trigger: Button::none(),
+            release: Button::none(),
+            left_stick: Some(Joystick::new(0.0, -1.0)),
+            right_stick: None,
+        },
+    ]
+});
+
+// static MACROS: sync::RwLock<Vec<Macro>> = sync::RwLock::new(vec![]);
 
 /// Counter increasing once every frame (right after swap)
 static FRAME_COUNTER: AtomicUsize = AtomicUsize::new(0);
@@ -181,11 +145,7 @@ fn my_swapBuffers() {
         hooked();
     }
     FRAME_COUNTER.fetch_add(1, Ordering::Relaxed);
-}
-
-#[on_initialize(Udp)]
-fn init() {
-    WWHDMenu::init(PLUGIN_NAME).unwrap();
+    FRAME_LIMITER.signal();
 }
 
 #[on_application_start(Udp)]
@@ -194,22 +154,21 @@ fn start() {
         return;
     }
 
-    if let Ok(enabled) = wups::storage::load::<bool>(settings::PLUGIN_ACTIVE) {
-        if enabled {
-            let mut thread = HANDLE.write();
-            if thread.is_none() {
-                *thread = Some(
-                    thread::Builder::default()
-                        .name("WWHD Trainer")
-                        .attribute(thread::thread::ThreadAttribute::Cpu2)
-                        .spawn(overlay_thread)
-                        .unwrap(),
-                );
-            }
+    // let macros = MACROS.write();
+    // macros.push(value);
 
-            let _ = notifications::info("WWHD Trainer started").show().unwrap();
-        }
+    let mut thread = HANDLE.lock().unwrap();
+    if thread.is_none() {
+        *thread = Some(
+            thread::Builder::default()
+                .name("WWHD Trainer")
+                .attribute(thread::thread::ThreadAttribute::Cpu2)
+                .spawn(overlay_thread)
+                .unwrap(),
+        );
     }
+
+    let _ = notifications::info("WWHD Trainer started").show().unwrap();
 }
 
 #[derive(Debug, Default)]
@@ -310,15 +269,6 @@ struct PositionRestore {
     y: f32,
     z: f32,
 }
-
-// Put off for now. Maybe something like this later.
-// struct Macro(Vec<wut::gamepad::GamepadState>);
-
-// impl Macro {
-//     pub fn new(inputs: impl Into<Vec<wut::gamepad::GamepadState>>) -> Self {
-//         Self(inputs.into())
-//     }
-// }
 
 impl PositionRestore {
     pub fn new() -> Arc<Mutex<PositionRestore>> {
@@ -480,7 +430,7 @@ fn overlay_thread() {
                             let ptr = (ptr + player::position::SPEED_OFFSET) as *mut f32;
 
                             if wut::ptr::is_valid(ptr) {
-                                let input = INPUT.read();
+                                let input = INPUT.lock().unwrap();
 
                                 core::ptr::write(ptr, 30.0 * input.left_stick.unwrap().abs());
 
@@ -983,9 +933,26 @@ fn overlay_thread() {
                         let pos = Arc::clone(&pos_restore);
                         move || unsafe {
                             let p = pos.lock().unwrap();
+
+                            // Enable and disable door cancel / collisions for teleport
+
+                            // let door_cancel = (core::ptr::read(misc::LINK_PTR)
+                            //     + misc::COLLISION_OFFSET)
+                            //     as *mut u32;
+
+                            // if wut::ptr::is_valid(door_cancel) {
+                            //     let value = core::ptr::read(door_cancel) | 0x4004;
+                            //     core::ptr::write(door_cancel, value);
+                            // }
+
                             core::ptr::write(player::position::X, p.x);
                             core::ptr::write(player::position::Y, p.y);
                             core::ptr::write(player::position::Z, p.z);
+
+                            // if wut::ptr::is_valid(door_cancel) {
+                            //     let value = core::ptr::read(door_cancel) & !0x4004;
+                            //     core::ptr::write(door_cancel, value);
+                            // }
                         }
                     }),
                 ],
@@ -993,39 +960,14 @@ fn overlay_thread() {
             Menu::new(
                 "Storage",
                 vec![
-                    // Button::new("Soft Reset", || unsafe {
-                    //     core::ptr::write(misc::SOFT_RESET, 1);
-                    // }),
-                    Toggle::new("Storage", false, |v| unsafe {
-                        core::ptr::write(misc::STORAGE, if v { 1 } else { 0 });
+                    Toggle::new("Storage", false, |v| {
+                        misc::storage(v);
                     }),
-                    Toggle::new("Chest Storage", false, |v| unsafe {
-                        let ptr =
-                            (core::ptr::read(misc::LINK_PTR) + misc::COLLISION_OFFSET) as *mut u32;
-
-                        if wut::ptr::is_valid(ptr) {
-                            if v {
-                                let value = core::ptr::read(ptr) | 0x4;
-                                core::ptr::write(ptr, value);
-                            } else {
-                                let value = core::ptr::read(ptr) & !0x4;
-                                core::ptr::write(ptr, value);
-                            }
-                        }
+                    Toggle::new("Chest Storage", false, |v| {
+                        misc::chest_storage(v);
                     }),
-                    Toggle::new("Door Cancel", false, |v| unsafe {
-                        let ptr =
-                            (core::ptr::read(misc::LINK_PTR) + misc::COLLISION_OFFSET) as *mut u32;
-
-                        if wut::ptr::is_valid(ptr) {
-                            if v {
-                                let value = core::ptr::read(ptr) | 0x4004;
-                                core::ptr::write(ptr, value);
-                            } else {
-                                let value = core::ptr::read(ptr) & !0x4004;
-                                core::ptr::write(ptr, value);
-                            }
-                        }
+                    Toggle::new("Door Cancel", false, |v| {
+                        misc::door_cancel(v);
                     }),
                 ],
             ),
@@ -1185,25 +1127,14 @@ fn overlay_thread() {
         ],
     ));
 
-    // let mut input = *INPUT.read();
-    let mut timer = wut::time::SystemTime::now();
-
     while thread::current().running() {
-        // if input != unsafe { INPUT } {
-        //     input = unsafe { INPUT };
-
-        //     overlay.run(input);
-        // }
-
-        overlay.run(*INPUT.read());
+        overlay.run(*INPUT.lock().unwrap());
 
         speed_popup.render();
 
         cheats.lock().unwrap().run();
 
-        let wait = (1000.0 / 30.0 - timer.elapsed().unwrap().as_millis() as f32) as u64;
-        wut::thread::sleep(wut::time::Duration::from_millis(wait));
-        timer = wut::time::SystemTime::now();
+        FRAME_LIMITER.wait(); //_timeout(time::Duration::from_millis(100));
     }
 
     logger::deinit();
@@ -1211,11 +1142,40 @@ fn overlay_thread() {
 
 #[on_application_exit(Udp)]
 fn stop() {
-    //     // println!("stop");
-
-    let mut h = HANDLE.write();
+    let mut h = HANDLE.lock().unwrap();
     if let Some(handle) = h.take() {
+        FRAME_LIMITER.signal();
         handle.thread().cancel();
         println!("{:?}", handle.join());
+    }
+}
+
+// Put off for now. Maybe something like this later.
+struct Macro {
+    inputs: Vec<wut::gamepad::GamepadState>,
+    index: usize,
+    enabled: bool,
+}
+
+impl Macro {
+    pub fn new(inputs: impl Into<Vec<wut::gamepad::GamepadState>>) -> Self {
+        Self {
+            inputs: inputs.into(),
+            index: 0,
+            enabled: false,
+        }
+    }
+}
+
+impl Iterator for Macro {
+    type Item = wut::gamepad::GamepadState;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let mut value = None;
+        if self.index < self.inputs.len() {
+            value = Some(self.inputs[self.index]);
+            self.index += 1;
+        }
+        value
     }
 }
