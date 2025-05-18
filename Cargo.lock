@@ -204,6 +204,7 @@ checksum = "04cbf5b083de1c7e0222a7a51dbfdba1cbe1c6ab0b15e29fff3f6c077fd9cd9f"
 [[package]]
 name = "math"
 version = "0.1.0"
+source = "git+https://github.com/rust-wiiu/wut?branch=main#1895a62aa6d83977dfad3a79a796d49e16371d70"
 dependencies = [
  "bindgen",
 ]
@@ -233,6 +234,7 @@ dependencies = [
 [[package]]
 name = "notifications"
 version = "0.2.0"
+source = "git+https://github.com/rust-wiiu/notifications?branch=main#10e4886f0f1f97efa21db4bc82eb6b3b727ccff9"
 dependencies = [
  "bindgen",
  "flagset",
@@ -258,6 +260,7 @@ checksum = "945462a4b81e43c4e3ba96bd7b49d834c6f61198356aa858733bc4acf3cbe62e"
 [[package]]
 name = "overlay"
 version = "0.2.0"
+source = "git+https://github.com/rust-wiiu/overlay?branch=main#a5e28fd5df269dd2ed588cd5cde3a409c0eef9e5"
 dependencies = [
  "notifications",
  "wut",
@@ -352,6 +355,7 @@ dependencies = [
 [[package]]
 name = "sys"
 version = "0.1.0"
+source = "git+https://github.com/rust-wiiu/wut?branch=main#1895a62aa6d83977dfad3a79a796d49e16371d70"
 dependencies = [
  "bindgen",
 ]
@@ -516,6 +520,7 @@ checksum = "589f6da84c646204747d1270a2a5661ea66ed1cced2631d546fdfb155959f9ec"
 [[package]]
 name = "wups"
 version = "0.2.0"
+source = "git+https://github.com/rust-wiiu/wups?branch=main#8771eb20c6273e957a049d6c7351bcac2b7ba55c"
 dependencies = [
  "bindgen",
  "flagset",
@@ -527,6 +532,7 @@ dependencies = [
 [[package]]
 name = "wups-macros"
 version = "0.1.0"
+source = "git+https://github.com/rust-wiiu/wups?branch=main#8771eb20c6273e957a049d6c7351bcac2b7ba55c"
 dependencies = [
  "chrono",
  "proc-macro2",
@@ -537,6 +543,7 @@ dependencies = [
 [[package]]
 name = "wut"
 version = "0.2.0"
+source = "git+https://github.com/rust-wiiu/wut?branch=main#1895a62aa6d83977dfad3a79a796d49e16371d70"
 dependencies = [
  "flagset",
  "math",
@@ -548,6 +555,7 @@ dependencies = [
 [[package]]
 name = "wut-macros"
 version = "0.1.0"
+source = "git+https://github.com/rust-wiiu/wut?branch=main#1895a62aa6d83977dfad3a79a796d49e16371d70"
 dependencies = [
  "proc-macro2",
  "quote",

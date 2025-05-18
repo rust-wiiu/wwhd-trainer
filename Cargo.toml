@@ -6,7 +6,7 @@ authors = ["29th-Day"]
 license = "GPL3"
 
 [dependencies]
-wut = { git = "https://github.com/rust-wiiu/wut" }
-wups = { git = "https://github.com/rust-wiiu/wups" }
-overlay = { git = "https://github.com/rust-wiiu/overlay" }
-notifications = { git = "https://github.com/rust-wiiu/notifications" }
+wut = { git = "https://github.com/rust-wiiu/wut", branch = "main" }
+wups = { git = "https://github.com/rust-wiiu/wups", branch = "main" }
+overlay = { git = "https://github.com/rust-wiiu/overlay", branch = "main" }
+notifications = { git = "https://github.com/rust-wiiu/notifications", branch = "main" }
