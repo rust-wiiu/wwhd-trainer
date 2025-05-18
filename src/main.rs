@@ -3,7 +3,7 @@
 
 use core::sync::atomic::{AtomicUsize, Ordering};
 
-use wut::{font::icons, gamepad::GamepadState};
+use wut::{font::icons, gamepad::State};
 use wut::prelude::*;
 use wut::*;
 
@@ -23,7 +23,7 @@ WUPS_PLUGIN_NAME!("WWHD Trainer");
 
 static HANDLE: LazyLock<Mutex<Option<thread::JoinHandle>>> = LazyLock::new(|| Mutex::new(None));
 
-static INPUT: LazyLock<Mutex<gamepad::GamepadState>> = LazyLock::new(|| Mutex::new(GamepadState::new()));
+static INPUT: LazyLock<Mutex<gamepad::State>> = LazyLock::new(|| Mutex::new(State::new()));
 
 static FRAME_LIMITER: sync::LazyLock<sync::AutoEvent> =
     sync::LazyLock::new(|| sync::AutoEvent::new());
@@ -60,7 +60,7 @@ fn my_VPADRead(
     if status != 0 {
         use wut::gamepad::{Button, Joystick};
 
-        let mut input = unsafe { gamepad::GamepadState::from(*buffers) };
+        let mut input = unsafe { gamepad::State::from(*buffers) };
 
         *INPUT.lock().unwrap() = input;
 
@@ -114,17 +114,17 @@ static mut MSS_ENABLED: bool = false;
 static mut ZOMBIE_ENABLED: bool = false;
 static mut PAUSE_ENABLED: bool = false;
 
-static MSS: sync::LazyLock<Vec<wut::gamepad::GamepadState>> = sync::LazyLock::new(|| {
+static MSS: sync::LazyLock<Vec<wut::gamepad::State>> = sync::LazyLock::new(|| {
     use wut::gamepad::*;
     vec![
-        GamepadState {
+        State {
             hold: Button::none(),
             trigger: Button::none(),
             release: Button::none(),
             left_stick: Some(Joystick::new(0.0, 1.0)),
             right_stick: None,
         },
-        GamepadState {
+        State {
             hold: Button::none(),
             trigger: Button::none(),
             release: Button::none(),
@@ -1152,13 +1152,13 @@ fn stop() {
 
 // Put off for now. Maybe something like this later.
 struct Macro {
-    inputs: Vec<wut::gamepad::GamepadState>,
+    inputs: Vec<wut::gamepad::State>,
     index: usize,
     enabled: bool,
 }
 
 impl Macro {
-    pub fn new(inputs: impl Into<Vec<wut::gamepad::GamepadState>>) -> Self {
+    pub fn new(inputs: impl Into<Vec<wut::gamepad::State>>) -> Self {
         Self {
             inputs: inputs.into(),
             index: 0,
@@ -1168,7 +1168,7 @@ impl Macro {
 }
 
 impl Iterator for Macro {
-    type Item = wut::gamepad::GamepadState;
+    type Item = wut::gamepad::State;
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut value = None;
