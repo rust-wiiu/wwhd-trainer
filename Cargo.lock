@@ -34,26 +34,6 @@ checksum = "ace50bade8e6234aa140d9a2f552bbee1db4d353f69b8217bc503490fc1a9f26"
 
 [[package]]
 name = "bindgen"
-version = "0.70.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f49d8fed880d473ea71efb9bf597651e77201bdd4893efe54c9e5d65ae04ce6f"
-dependencies = [
- "bitflags",
- "cexpr",
- "clang-sys",
- "itertools",
- "log",
- "prettyplease",
- "proc-macro2",
- "quote",
- "regex",
- "rustc-hash 1.1.0",
- "shlex",
- "syn",
-]
-
-[[package]]
-name = "bindgen"
 version = "0.71.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5f58bf3d7db68cfbac37cfc485a8d711e87e064c3d0fe0435b92f7a407f9d6b3"
@@ -67,7 +47,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "regex",
- "rustc-hash 2.1.1",
+ "rustc-hash",
  "shlex",
  "syn",
 ]
@@ -225,7 +205,7 @@ checksum = "04cbf5b083de1c7e0222a7a51dbfdba1cbe1c6ab0b15e29fff3f6c077fd9cd9f"
 name = "math"
 version = "0.1.0"
 dependencies = [
- "bindgen 0.71.1",
+ "bindgen",
 ]
 
 [[package]]
@@ -252,9 +232,9 @@ dependencies = [
 
 [[package]]
 name = "notifications"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
- "bindgen 0.71.1",
+ "bindgen",
  "flagset",
  "thiserror",
  "wut",
@@ -277,7 +257,7 @@ checksum = "945462a4b81e43c4e3ba96bd7b49d834c6f61198356aa858733bc4acf3cbe62e"
 
 [[package]]
 name = "overlay"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "notifications",
  "wut",
@@ -342,12 +322,6 @@ checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
 
 [[package]]
 name = "rustc-hash"
-version = "1.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "08d43f7aa6b08d49f382cde6a7982047c3426db949b1424bc4b7ec9ae12c6ce2"
-
-[[package]]
-name = "rustc-hash"
 version = "2.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "357703d41365b4b27c590e3ed91eabb1b663f07c4c084095e60cbed4362dff0d"
@@ -379,7 +353,7 @@ dependencies = [
 name = "sys"
 version = "0.1.0"
 dependencies = [
- "bindgen 0.71.1",
+ "bindgen",
 ]
 
 [[package]]
@@ -541,9 +515,9 @@ checksum = "589f6da84c646204747d1270a2a5661ea66ed1cced2631d546fdfb155959f9ec"
 
 [[package]]
 name = "wups"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
- "bindgen 0.70.1",
+ "bindgen",
  "flagset",
  "thiserror",
  "wups-macros",
@@ -562,7 +536,7 @@ dependencies = [
 
 [[package]]
 name = "wut"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "flagset",
  "math",
