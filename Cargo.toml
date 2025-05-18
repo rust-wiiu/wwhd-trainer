@@ -1,9 +1,12 @@
 [package]
 name = "wwhd-trainer"
+description = "On-console Wind Waker HD Trainer"
 version = "0.5.0"
 edition = "2021"
 authors = ["29th-Day"]
-license = "GPL3"
+license-file = "LICENSE"
+repository = "https://github.com/rust-wiiu/wwhd-trainer"
+publish = false
 
 [dependencies]
 wut = { git = "https://github.com/rust-wiiu/wut", tag = "v0.3.0" }
