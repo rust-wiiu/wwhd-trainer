@@ -5,6 +5,8 @@
 
 A plugin for the Aroma Homebrew Environment which has a range of cheats, modifications and information about Wind Waker HD. This plugin is written for speedrun practice but can be used by everybody who wants to do shenanigans inside WWHD.
 
+https://github.com/user-attachments/assets/1afe6e88-0aa5-4fc4-8130-695cef063dc8
+
 The goal is to have a standalone (i.e. no PC required) trainer which can be controlled from inside the game. The idea was loosely inspired by the [Wind Waker Practice Rom](https://github.com/zsrtww/tww-gz). Other trainers depend of TCPGecko (and therefore Tiramisu) and a PC app.
 
 If you are interested in WWHD speedrunning you might want to [join our Discord server](https://discord.gg/35u82nGCdF). Here you will find all resources about WWHD. You can also check out the [speedrun.com leaderboard](https://www.speedrun.com/twwhd).
