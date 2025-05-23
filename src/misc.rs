@@ -1,53 +1,96 @@
 #![allow(dead_code)]
 
-pub const SOFT_RESET: *mut u8 = 0x1098f293 as *mut u8;
+pub mod collision {
+    pub const ADDRESS: *mut usize = 0x10976de4 as *mut usize;
+    pub const OFFSET: usize = 2060 + 40;
 
-pub const LINK_PTR: *mut usize = 0x10976de4 as *mut usize;
+    pub use Version::*;
 
-pub const COLLISION_OFFSET: usize = 2060 + 40;
+    pub enum Version {
+        ChestStorage = 0x4,
+        DoorCancel = 0x4004,
+    }
 
-pub const STORAGE: *mut u8 = 0x10976543 as *mut u8;
+    #[inline]
+    pub fn set(value: u32) {
+        unsafe {
+            let ptr = core::ptr::read(ADDRESS);
+            let ptr = (ptr + OFFSET) as *mut u32;
 
-pub fn door_cancel(enabled: bool) {
-    unsafe {
-        let ptr = (core::ptr::read(LINK_PTR) + COLLISION_OFFSET) as *mut u32;
-
-        if wut::ptr::is_valid(ptr) {
-            if enabled {
-                let value = core::ptr::read(ptr) | 0x4004;
-                core::ptr::write(ptr, value);
-            } else {
-                let value = core::ptr::read(ptr) & !0x4004;
+            if wut::ptr::is_valid(ptr) {
                 core::ptr::write(ptr, value);
             }
         }
     }
-}
 
-pub fn chest_storage(enabled: bool) {
-    unsafe {
-        let ptr = (core::ptr::read(LINK_PTR) + COLLISION_OFFSET) as *mut u32;
+    #[inline]
+    pub fn get() -> u32 {
+        unsafe {
+            let ptr = core::ptr::read(ADDRESS);
+            let ptr = (ptr + OFFSET) as *mut u32;
 
-        if wut::ptr::is_valid(ptr) {
-            if enabled {
-                let value = core::ptr::read(ptr) | 0x4;
-                core::ptr::write(ptr, value);
+            if wut::ptr::is_valid(ptr) {
+                core::ptr::read(ptr)
             } else {
-                let value = core::ptr::read(ptr) & !0x4;
-                core::ptr::write(ptr, value);
+                0
             }
         }
     }
-}
 
-pub fn storage(enabled: bool) {
-    unsafe {
-        core::ptr::write(STORAGE, if enabled { 1 } else { 0 });
+    #[inline]
+    pub fn enable(version: Version) {
+        set(get() | version as u32)
+    }
+
+    #[inline]
+    pub fn disable(version: Version) {
+        set(get() & !(version as u32))
     }
 }
 
-pub fn soft_reset() {
-    unsafe {
-        core::ptr::write(SOFT_RESET, 1);
+pub mod storage {
+    pub const ADDRESS: *mut u8 = 0x10976543 as *mut u8;
+
+    #[inline]
+    pub fn set(value: u8) {
+        unsafe {
+            core::ptr::write(ADDRESS, value);
+        }
+    }
+
+    #[inline]
+    pub fn get() -> u8 {
+        unsafe { core::ptr::read(ADDRESS) }
+    }
+
+    #[inline]
+    pub fn enable() {
+        set(1);
+    }
+
+    #[inline]
+    pub fn disable() {
+        set(0);
+    }
+}
+
+pub mod soft_reset {
+    pub const ADDRESS: *mut u8 = 0x1098f293 as *mut u8;
+
+    #[inline]
+    pub fn set(value: u8) {
+        unsafe {
+            core::ptr::write(ADDRESS, value);
+        }
+    }
+
+    #[inline]
+    pub fn get() -> u8 {
+        unsafe { core::ptr::read(ADDRESS) }
+    }
+
+    #[inline]
+    pub fn activate() {
+        set(1);
     }
 }
