@@ -6,8 +6,7 @@ use wut::prelude::*;
 use wut::*;
 
 use alloc::rc::Rc;
-use alloc::sync::Arc;
-use core::cell::{Cell, RefCell};
+use core::cell::RefCell;
 use notifications;
 use overlay;
 use wupf::{
@@ -36,7 +35,7 @@ fn is_windwaker() -> bool {
 struct WWHDTrainer {
     active: bool,
     controller: Option<gamepad::Port>,
-    state: Arc<RefCell<State>>,
+    state: Rc<RefCell<State>>,
     overlay: overlay::Overlay,
 }
 
@@ -53,8 +52,8 @@ pub struct State {
 }
 
 impl State {
-    pub fn new() -> Arc<RefCell<Self>> {
-        Arc::new(RefCell::new(Self::default()))
+    pub fn new() -> Rc<RefCell<Self>> {
+        Rc::new(RefCell::new(Self::default()))
     }
 }
 
@@ -463,7 +462,7 @@ impl Plugin for WWHDTrainer {
         Self {
             active: false,
             controller: None,
-            state: Arc::clone(&state),
+            state: Rc::clone(&state),
             overlay: Overlay::new(Menu::new(
                 "Root",
                 vec![
@@ -471,43 +470,43 @@ impl Plugin for WWHDTrainer {
                         "Cheats",
                         vec![
                             Toggle::new("Infinite Health", false, {
-                                let state = Arc::clone(&state);
+                                let state = Rc::clone(&state);
                                 move |v| {
                                     state.borrow_mut().cheats.health = v;
                                 }
                             }),
                             Toggle::new("Infinite Magic", false, {
-                                let state = Arc::clone(&state);
+                                let state = Rc::clone(&state);
                                 move |v| {
                                     state.borrow_mut().cheats.magic = v;
                                 }
                             }),
                             Toggle::new("Infinite Rupees", false, {
-                                let state = Arc::clone(&state);
+                                let state = Rc::clone(&state);
                                 move |v| {
                                     state.borrow_mut().cheats.rupees = v;
                                 }
                             }),
                             Toggle::new("Infinite Arrows", false, {
-                                let state = Arc::clone(&state);
+                                let state = Rc::clone(&state);
                                 move |v| {
                                     state.borrow_mut().cheats.arrows = v;
                                 }
                             }),
                             Toggle::new("Infinite Bombs", false, {
-                                let state = Arc::clone(&state);
+                                let state = Rc::clone(&state);
                                 move |v| {
                                     state.borrow_mut().cheats.bombs = v;
                                 }
                             }),
                             Toggle::new("Infinite Air", false, {
-                                let state = Arc::clone(&state);
+                                let state = Rc::clone(&state);
                                 move |v| {
                                     state.borrow_mut().cheats.air = v;
                                 }
                             }),
                             Toggle::new("Complete Map", false, {
-                                let state = Arc::clone(&state);
+                                let state = Rc::clone(&state);
                                 move |v| {
                                     let mut state = state.borrow_mut();
 
@@ -522,10 +521,10 @@ impl Plugin for WWHDTrainer {
                                 }
                             }),
                             Toggle::new("Super Swim", false, {
-                                let state = Arc::clone(&state);
+                                let state = Rc::clone(&state);
                                 move |v| {
                                     if !v {
-                                        // unsafe {
+                                        // {
                                         //     core::ptr::write(player::AIR as *mut u32, 800);
                                         // }
                                         player::super_swim::disable();
@@ -534,11 +533,11 @@ impl Plugin for WWHDTrainer {
                                 }
                             }),
                             Toggle::new("Super Crouch", false, {
-                                let state = Arc::clone(&state);
+                                let state = Rc::clone(&state);
                                 move |v| {
                                     // this code needs manual disabling
                                     if !v {
-                                        // unsafe {
+                                        // {
                                         //     core::ptr::write(player::SUPER_CROUCH, 0x4040_0000);
                                         // }
                                         player::super_crouch::disable();
@@ -547,7 +546,7 @@ impl Plugin for WWHDTrainer {
                                 }
                             }),
                             Button::new("Hover", {
-                                let state = Arc::clone(&state);
+                                let state = Rc::clone(&state);
                                 move || {
                                     state.borrow_mut().cheats.hover = true;
                                 }
@@ -558,39 +557,39 @@ impl Plugin for WWHDTrainer {
                         "Link Tweaks",
                         vec![
                             Number::new("Health", 1, 1, 0, 80, |v| player::health::set(*v)),
-                            Number::new("Containers", 1, 1, 1, 20, |v| unsafe {
+                            Number::new("Containers", 1, 1, 1, 20, |v| {
                                 // core::ptr::write(player::CONTAINERS, *v * 4);
                                 player::containers::set(*v * 4);
                             }),
-                            Number::new("Magic", 0, 1, 0, 32, |v| unsafe {
+                            Number::new("Magic", 0, 1, 0, 32, |v| {
                                 // core::ptr::write(player::MAGIC, *v);
                                 player::magic::set(*v);
                             }),
                             Select::new(
                                 "Max Magic",
                                 vec![("No Magic", 0), ("Normal Magic", 16), ("Double Magic", 32)],
-                                |_, v| unsafe {
+                                |_, v| {
                                     // core::ptr::write(player::MAX_MAGIC, v.value);
                                     player::max_magic::set(v.value);
                                 },
                             ),
-                            Number::new("Rupees", 50, 10, 0, 5000, |v| unsafe {
+                            Number::new("Rupees", 50, 10, 0, 5000, |v| {
                                 // core::ptr::write(player::RUPEES, *v);
                                 player::rupees::set(*v);
                             }),
-                            Number::new("Arrows", 30, 10, 0, 99, |v| unsafe {
+                            Number::new("Arrows", 30, 10, 0, 99, |v| {
                                 // core::ptr::write(player::ARROWS, *v);
                                 player::arrows::set(*v);
                             }),
-                            Number::new("Max Arrows", 30, 10, 0, 99, |v| unsafe {
+                            Number::new("Max Arrows", 30, 10, 0, 99, |v| {
                                 // core::ptr::write(player::MAX_ARROWS, *v);
                                 player::max_arrows::set(*v);
                             }),
-                            Number::new("Bombs", 30, 10, 0, 99, |v| unsafe {
+                            Number::new("Bombs", 30, 10, 0, 99, |v| {
                                 // core::ptr::write(player::BOMBS, *v);
                                 player::bombs::set(*v);
                             }),
-                            Number::new("Max Bombs", 30, 10, 0, 99, |v| unsafe {
+                            Number::new("Max Bombs", 30, 10, 0, 99, |v| {
                                 // core::ptr::write(player::MAX_BOMBS, *v);
                                 player::max_bombs::set(*v);
                             }),
@@ -599,7 +598,7 @@ impl Plugin for WWHDTrainer {
                     Menu::new(
                         "Items",
                         vec![
-                            Toggle::new("Bait Bag", false, |v| unsafe {
+                            Toggle::new("Bait Bag", false, |v| {
                                 // let v = if v { items::BAIT_BAG.value } else { 0 };
                                 // core::ptr::write(items::BAIT_BAG.address, v);
 
@@ -609,7 +608,7 @@ impl Plugin for WWHDTrainer {
                                     items::bait_bag::disable();
                                 }
                             }),
-                            Toggle::new("Bombs", false, |v| unsafe {
+                            Toggle::new("Bombs", false, |v| {
                                 // let v = if v { items::BOMBS.value } else { 0 };
                                 // core::ptr::write(items::BOMBS.address, v);
 
@@ -619,7 +618,7 @@ impl Plugin for WWHDTrainer {
                                     items::bombs::disable();
                                 }
                             }),
-                            Toggle::new("Boomerang", false, |v| unsafe {
+                            Toggle::new("Boomerang", false, |v| {
                                 // let v = if v { items::BOOMERANG.value } else { 0 };
                                 // core::ptr::write(items::BOOMERANG.address, v);
                                 if v {
@@ -628,7 +627,7 @@ impl Plugin for WWHDTrainer {
                                     items::boomerang::disable();
                                 }
                             }),
-                            Toggle::new("Deku Leaf", false, |v| unsafe {
+                            Toggle::new("Deku Leaf", false, |v| {
                                 // let v = if v { items::DEKU_LEAF.value } else { 0 };
                                 // core::ptr::write(items::DEKU_LEAF.address, v);
                                 if v {
@@ -637,7 +636,7 @@ impl Plugin for WWHDTrainer {
                                     items::deku_leaf::disable();
                                 }
                             }),
-                            Toggle::new("Delivery Bag", false, |v| unsafe {
+                            Toggle::new("Delivery Bag", false, |v| {
                                 // let v = if v { items::DELIVERY_BAG.value } else { 0 };
                                 // core::ptr::write(items::DELIVERY_BAG.address, v);
                                 if v {
@@ -653,12 +652,12 @@ impl Plugin for WWHDTrainer {
                                     ("Normal", items::picto_box::Version::Normal),
                                     ("Deluxe", items::picto_box::Version::Delux),
                                 ],
-                                |_, v| unsafe {
+                                |_, v| {
                                     // core::ptr::write(items::PICTO_BOX.address, v.value);
                                     items::picto_box::enable(v.value);
                                 },
                             ),
-                            Toggle::new("Grappling Hook", false, |v| unsafe {
+                            Toggle::new("Grappling Hook", false, |v| {
                                 // let v = if v { items::GRAPPLING_HOOK.value } else { 0 };
                                 // core::ptr::write(items::GRAPPLING_HOOK.address, v);
                                 if v {
@@ -675,11 +674,11 @@ impl Plugin for WWHDTrainer {
                                     ("Fire & Ice", items::bow::Version::Elemental),
                                     ("Light", items::bow::Version::Magical),
                                 ],
-                                |_, v| unsafe {
+                                |_, v| {
                                     items::bow::enable(v.value);
                                 },
                             ),
-                            Toggle::new("Hero's Charm", false, |v| unsafe {
+                            Toggle::new("Hero's Charm", false, |v| {
                                 // let v = if v { items::HERO_CHARM.value } else { 0 };
                                 // core::ptr::write(items::HERO_CHARM.address, v);
                                 if v {
@@ -695,7 +694,7 @@ impl Plugin for WWHDTrainer {
                                     ("Normal", items::shield::Version::Hero),
                                     ("Mirror", items::shield::Version::Mirror),
                                 ],
-                                |_, v| unsafe {
+                                |_, v| {
                                     // core::ptr::write(items::HERO_SHIELD.address, v.value);
                                     items::shield::enable(v.value);
                                 },
@@ -709,12 +708,12 @@ impl Plugin for WWHDTrainer {
                                     ("Master 2", items::sword::Version::Master2),
                                     ("Master 3", items::sword::Version::Master3),
                                 ],
-                                |_, v| unsafe {
+                                |_, v| {
                                     // core::ptr::write(items::HERO_SWORD.address, v.value);
                                     items::sword::enable(v.value);
                                 },
                             ),
-                            Toggle::new("Hookshot", false, |v| unsafe {
+                            Toggle::new("Hookshot", false, |v| {
                                 // let v = if v { items::HOOKSHOT.value } else { 0 };
                                 // core::ptr::write(items::HOOKSHOT.address, v);
                                 if v {
@@ -723,7 +722,7 @@ impl Plugin for WWHDTrainer {
                                     items::hookshot::disable();
                                 }
                             }),
-                            Toggle::new("Iron Boots", false, |v| unsafe {
+                            Toggle::new("Iron Boots", false, |v| {
                                 // let v = if v { items::IRON_BOOTS.value } else { 0 };
                                 // core::ptr::write(items::IRON_BOOTS.address, v);
                                 if v {
@@ -732,7 +731,7 @@ impl Plugin for WWHDTrainer {
                                     items::iron_boots::disable();
                                 }
                             }),
-                            Toggle::new("Magic Armor", false, |v| unsafe {
+                            Toggle::new("Magic Armor", false, |v| {
                                 // let v = if v { items::MAGIC_ARMOR.value } else { 0 };
                                 // core::ptr::write(items::MAGIC_ARMOR.address, v);
                                 if v {
@@ -741,7 +740,7 @@ impl Plugin for WWHDTrainer {
                                     items::magic_armor::disable();
                                 }
                             }),
-                            Toggle::new("Power Bracelets", false, |v| unsafe {
+                            Toggle::new("Power Bracelets", false, |v| {
                                 // let v1 = if v {
                                 //     items::POWER_BRACELETS_1.value
                                 // } else {
@@ -758,7 +757,7 @@ impl Plugin for WWHDTrainer {
                                     items::power_bracelets::disable();
                                 }
                             }),
-                            Toggle::new("Skull Hammer", false, |v| unsafe {
+                            Toggle::new("Skull Hammer", false, |v| {
                                 // let v = if v { items::SKULL_HAMMER.value } else { 0 };
                                 // core::ptr::write(items::SKULL_HAMMER.address, v);
                                 if v {
@@ -767,7 +766,7 @@ impl Plugin for WWHDTrainer {
                                     items::skull_hammer::disable();
                                 }
                             }),
-                            Toggle::new("Spoils Bag", false, |v| unsafe {
+                            Toggle::new("Spoils Bag", false, |v| {
                                 // let v = if v { items::SPOILS_BAG.value } else { 0 };
                                 // core::ptr::write(items::SPOILS_BAG.address, v);
                                 if v {
@@ -776,7 +775,7 @@ impl Plugin for WWHDTrainer {
                                     items::spoils_bag::disable();
                                 }
                             }),
-                            Toggle::new("Telescope", false, |v| unsafe {
+                            Toggle::new("Telescope", false, |v| {
                                 // let v = if v { items::TELESCOPE.value } else { 0 };
                                 // core::ptr::write(items::TELESCOPE.address, v);
                                 if v {
@@ -785,7 +784,7 @@ impl Plugin for WWHDTrainer {
                                     items::telescope::disable();
                                 }
                             }),
-                            Toggle::new("Tingle Bottle", false, |v| unsafe {
+                            Toggle::new("Tingle Bottle", false, |v| {
                                 // let v = if v { items::TINGLE_BOTTLE.value } else { 0 };
                                 // core::ptr::write(items::TINGLE_BOTTLE.address, v);
                                 if v {
@@ -794,7 +793,7 @@ impl Plugin for WWHDTrainer {
                                     items::tingle_bottle::disable();
                                 }
                             }),
-                            Toggle::new("Wind Waker", false, |v| unsafe {
+                            Toggle::new("Wind Waker", false, |v| {
                                 // let v = if v { items::WIND_WAKER.value } else { 0 };
                                 // core::ptr::write(items::WIND_WAKER.address, v);
                                 if v {
@@ -810,7 +809,7 @@ impl Plugin for WWHDTrainer {
                                     ("Normal", items::sail::Version::Normal),
                                     ("Swift", items::sail::Version::Swift),
                                 ],
-                                |_, v| unsafe {
+                                |_, v| {
                                     // core::ptr::write(items::NORMAL_SAIL.address, v.value);
                                     items::sail::enable(v.value);
                                 },
@@ -818,56 +817,40 @@ impl Plugin for WWHDTrainer {
                             Menu::new(
                                 "Bottles",
                                 vec![
-                                    Select::new(
-                                        "Bottle 1",
-                                        bottle_options.clone(),
-                                        |_, v| unsafe {
-                                            // core::ptr::write(items::BOTTLE_1.address, v.value);
-                                            items::bottles::enable(
-                                                items::bottles::Slot::Bottle1,
-                                                v.value,
-                                            );
-                                        },
-                                    ),
-                                    Select::new(
-                                        "Bottle 2",
-                                        bottle_options.clone(),
-                                        |_, v| unsafe {
-                                            // core::ptr::write(items::BOTTLE_2.address, v.value);
-                                            items::bottles::enable(
-                                                items::bottles::Slot::Bottle2,
-                                                v.value,
-                                            );
-                                        },
-                                    ),
-                                    Select::new(
-                                        "Bottle 3",
-                                        bottle_options.clone(),
-                                        |_, v| unsafe {
-                                            // core::ptr::write(items::BOTTLE_3.address, v.value);
-                                            items::bottles::enable(
-                                                items::bottles::Slot::Bottle3,
-                                                v.value,
-                                            );
-                                        },
-                                    ),
-                                    Select::new(
-                                        "Bottle 4",
-                                        bottle_options.clone(),
-                                        |_, v| unsafe {
-                                            // core::ptr::write(items::BOTTLE_4.address, v.value);
-                                            items::bottles::enable(
-                                                items::bottles::Slot::Bottle4,
-                                                v.value,
-                                            );
-                                        },
-                                    ),
+                                    Select::new("Bottle 1", bottle_options.clone(), |_, v| {
+                                        // core::ptr::write(items::BOTTLE_1.address, v.value);
+                                        items::bottles::enable(
+                                            items::bottles::Slot::Bottle1,
+                                            v.value,
+                                        );
+                                    }),
+                                    Select::new("Bottle 2", bottle_options.clone(), |_, v| {
+                                        // core::ptr::write(items::BOTTLE_2.address, v.value);
+                                        items::bottles::enable(
+                                            items::bottles::Slot::Bottle2,
+                                            v.value,
+                                        );
+                                    }),
+                                    Select::new("Bottle 3", bottle_options.clone(), |_, v| {
+                                        // core::ptr::write(items::BOTTLE_3.address, v.value);
+                                        items::bottles::enable(
+                                            items::bottles::Slot::Bottle3,
+                                            v.value,
+                                        );
+                                    }),
+                                    Select::new("Bottle 4", bottle_options.clone(), |_, v| {
+                                        // core::ptr::write(items::BOTTLE_4.address, v.value);
+                                        items::bottles::enable(
+                                            items::bottles::Slot::Bottle4,
+                                            v.value,
+                                        );
+                                    }),
                                 ],
                             ),
                             Menu::new(
                                 "Songs",
                                 vec![
-                                    Toggle::new("Wind's Requiem", false, |v| unsafe {
+                                    Toggle::new("Wind's Requiem", false, |v| {
                                         // let x = core::ptr::read(items::WINDS_REQUIEM.address);
                                         // let x = if v {
                                         //     x | items::WINDS_REQUIEM.value
@@ -881,7 +864,7 @@ impl Plugin for WWHDTrainer {
                                             items::songs::disable(items::songs::Song::WindRequiem);
                                         }
                                     }),
-                                    Toggle::new("Ballad of Gales", false, |v| unsafe {
+                                    Toggle::new("Ballad of Gales", false, |v| {
                                         // let x = core::ptr::read(items::BALLAD_OF_GALES.address);
                                         // let x = if v {
                                         //     x | items::BALLAD_OF_GALES.value
@@ -898,7 +881,7 @@ impl Plugin for WWHDTrainer {
                                             );
                                         }
                                     }),
-                                    Toggle::new("Command Melody", false, |v| unsafe {
+                                    Toggle::new("Command Melody", false, |v| {
                                         // let x = core::ptr::read(items::COMMAND_MELODY.address);
                                         // let x = if v {
                                         //     x | items::COMMAND_MELODY.value
@@ -914,7 +897,7 @@ impl Plugin for WWHDTrainer {
                                             );
                                         }
                                     }),
-                                    Toggle::new("Earth God's Lyrics", false, |v| unsafe {
+                                    Toggle::new("Earth God's Lyrics", false, |v| {
                                         // let x = core::ptr::read(items::EARTH_GODS_LYRICS.address);
                                         // let x = if v {
                                         //     x | items::EARTH_GODS_LYRICS.value
@@ -932,7 +915,7 @@ impl Plugin for WWHDTrainer {
                                             );
                                         }
                                     }),
-                                    Toggle::new("Wind God's Aria", false, |v| unsafe {
+                                    Toggle::new("Wind God's Aria", false, |v| {
                                         // let x = core::ptr::read(items::WIND_GODS_ARIA.address);
                                         // let x = if v {
                                         //     x | items::WIND_GODS_ARIA.value
@@ -946,7 +929,7 @@ impl Plugin for WWHDTrainer {
                                             items::songs::disable(items::songs::Song::WindGodsAria);
                                         }
                                     }),
-                                    Toggle::new("Song of Passing", false, |v| unsafe {
+                                    Toggle::new("Song of Passing", false, |v| {
                                         // let x = core::ptr::read(items::SONG_OF_PASSING.address);
                                         // let x = if v {
                                         //     x | items::SONG_OF_PASSING.value
@@ -964,7 +947,7 @@ impl Plugin for WWHDTrainer {
                                     }),
                                 ],
                             ),
-                            Number::new("Triforce", 0u8, 1, 0, 8, |v| unsafe {
+                            Number::new("Triforce", 0u8, 1, 0, 8, |v| {
                                 // let x = if *v == 8 { 0xff } else { (1 << *v) - 1 };
                                 // core::ptr::write(items::TRIFORCE.address, x);
                                 items::triforce::enable(*v);
@@ -972,7 +955,7 @@ impl Plugin for WWHDTrainer {
                             Menu::new(
                                 "Pearls",
                                 vec![
-                                    Toggle::new("Nayru's Pearl", false, |v| unsafe {
+                                    Toggle::new("Nayru's Pearl", false, |v| {
                                         //     let x = core::ptr::read(items::NAYRUS_PEARL.address);
                                         //     let x = if v {
                                         //         x | items::NAYRUS_PEARL.value
@@ -986,7 +969,7 @@ impl Plugin for WWHDTrainer {
                                             items::pearls::disable(items::pearls::Pearl::Nayru);
                                         }
                                     }),
-                                    Toggle::new("Din's Pearl", false, |v| unsafe {
+                                    Toggle::new("Din's Pearl", false, |v| {
                                         // let x = core::ptr::read(items::DINS_PEARL.address);
                                         // let x = if v {
                                         //     x | items::DINS_PEARL.value
@@ -1000,7 +983,7 @@ impl Plugin for WWHDTrainer {
                                             items::pearls::disable(items::pearls::Pearl::Din);
                                         }
                                     }),
-                                    Toggle::new("Farore's Pearl", false, |v| unsafe {
+                                    Toggle::new("Farore's Pearl", false, |v| {
                                         // let x = core::ptr::read(items::FARORES_PEARL.address);
                                         // let x = if v {
                                         //     x | items::FARORES_PEARL.value
@@ -1019,56 +1002,56 @@ impl Plugin for WWHDTrainer {
                             Menu::new(
                                 "Mailbag",
                                 vec![
-                                    Select::new("Item 1", mailbag_options.clone(), |_, v| unsafe {
+                                    Select::new("Item 1", mailbag_options.clone(), |_, v| {
                                         // core::ptr::write(items::MAILBAG_1.address, v.value);
                                         items::mailbag::enable(
                                             items::mailbag::Slot::Slot1,
                                             v.value,
                                         );
                                     }),
-                                    Select::new("Item 2", mailbag_options.clone(), |_, v| unsafe {
+                                    Select::new("Item 2", mailbag_options.clone(), |_, v| {
                                         // core::ptr::write(items::MAILBAG_2.address, v.value);
                                         items::mailbag::enable(
                                             items::mailbag::Slot::Slot2,
                                             v.value,
                                         );
                                     }),
-                                    Select::new("Item 3", mailbag_options.clone(), |_, v| unsafe {
+                                    Select::new("Item 3", mailbag_options.clone(), |_, v| {
                                         // core::ptr::write(items::MAILBAG_3.address, v.value);
                                         items::mailbag::enable(
                                             items::mailbag::Slot::Slot3,
                                             v.value,
                                         );
                                     }),
-                                    Select::new("Item 4", mailbag_options.clone(), |_, v| unsafe {
+                                    Select::new("Item 4", mailbag_options.clone(), |_, v| {
                                         // core::ptr::write(items::MAILBAG_4.address, v.value);
                                         items::mailbag::enable(
                                             items::mailbag::Slot::Slot4,
                                             v.value,
                                         );
                                     }),
-                                    Select::new("Item 5", mailbag_options.clone(), |_, v| unsafe {
+                                    Select::new("Item 5", mailbag_options.clone(), |_, v| {
                                         // core::ptr::write(items::MAILBAG_5.address, v.value);
                                         items::mailbag::enable(
                                             items::mailbag::Slot::Slot5,
                                             v.value,
                                         );
                                     }),
-                                    Select::new("Item 6", mailbag_options.clone(), |_, v| unsafe {
+                                    Select::new("Item 6", mailbag_options.clone(), |_, v| {
                                         // core::ptr::write(items::MAILBAG_6.address, v.value);
                                         items::mailbag::enable(
                                             items::mailbag::Slot::Slot6,
                                             v.value,
                                         );
                                     }),
-                                    Select::new("Item 7", mailbag_options.clone(), |_, v| unsafe {
+                                    Select::new("Item 7", mailbag_options.clone(), |_, v| {
                                         // core::ptr::write(items::MAILBAG_7.address, v.value);
                                         items::mailbag::enable(
                                             items::mailbag::Slot::Slot7,
                                             v.value,
                                         );
                                     }),
-                                    Select::new("Item 8", mailbag_options.clone(), |_, v| unsafe {
+                                    Select::new("Item 8", mailbag_options.clone(), |_, v| {
                                         // core::ptr::write(items::MAILBAG_8.address, v.value);
                                         items::mailbag::enable(
                                             items::mailbag::Slot::Slot8,
@@ -1080,11 +1063,11 @@ impl Plugin for WWHDTrainer {
                             Menu::new(
                                 "Dungeon",
                                 vec![
-                                    Number::new("Dungeon Keys", 0, 1, 0, 10, |v| unsafe {
+                                    Number::new("Dungeon Keys", 0, 1, 0, 10, |v| {
                                         // core::ptr::write(items::DUNGEON_KEYS.address, *v);
                                         items::dungeon_keys::enable(*v);
                                     }),
-                                    Toggle::new("Map", false, |v| unsafe {
+                                    Toggle::new("Map", false, |v| {
                                         // let x = core::ptr::read(items::DUNGEON_MAP.address);
                                         // let x = if v {
                                         //     x | items::DUNGEON_MAP.value
@@ -1100,7 +1083,7 @@ impl Plugin for WWHDTrainer {
                                             );
                                         }
                                     }),
-                                    Toggle::new("Compass", false, |v| unsafe {
+                                    Toggle::new("Compass", false, |v| {
                                         // let x = core::ptr::read(items::DUNGEON_COMPASS.address);
                                         // let x = if v {
                                         //     x | items::DUNGEON_COMPASS.value
@@ -1118,7 +1101,7 @@ impl Plugin for WWHDTrainer {
                                             );
                                         }
                                     }),
-                                    Toggle::new("Boss Key", false, |v| unsafe {
+                                    Toggle::new("Boss Key", false, |v| {
                                         // let x = core::ptr::read(items::DUNGEON_BOSS_KEY.address);
                                         // let x = if v {
                                         //     x | items::DUNGEON_BOSS_KEY.value
@@ -1144,108 +1127,47 @@ impl Plugin for WWHDTrainer {
                                 let min = 0;
                                 let max = 99;
                                 vec![
-                                    Number::new(
-                                        "Red Chu Jelly",
-                                        value,
-                                        inc,
-                                        min,
-                                        max,
-                                        |v| unsafe {
-                                            // core::ptr::write(items::RED_JELLY.address, *v);
-                                            items::spoils_bag::spoil(
-                                                items::spoils_bag::RedJelly,
-                                                *v,
-                                            );
-                                        },
-                                    ),
-                                    Number::new(
-                                        "Green Chu Jelly",
-                                        value,
-                                        inc,
-                                        min,
-                                        max,
-                                        |v| unsafe {
-                                            // core::ptr::write(items::GREEN_JELLY.address, *v);
-                                            items::spoils_bag::spoil(
-                                                items::spoils_bag::GreenJelly,
-                                                *v,
-                                            );
-                                        },
-                                    ),
-                                    Number::new(
-                                        "Blue Chu Jelly",
-                                        value,
-                                        inc,
-                                        min,
-                                        max,
-                                        |v| unsafe {
-                                            // core::ptr::write(items::BLUE_JELLY.address, *v);
-                                            items::spoils_bag::spoil(
-                                                items::spoils_bag::BlueJelly,
-                                                *v,
-                                            );
-                                        },
-                                    ),
-                                    Number::new("Joy Pendant", value, inc, min, max, |v| unsafe {
+                                    Number::new("Red Chu Jelly", value, inc, min, max, |v| {
+                                        // core::ptr::write(items::RED_JELLY.address, *v);
+                                        items::spoils_bag::spoil(items::spoils_bag::RedJelly, *v);
+                                    }),
+                                    Number::new("Green Chu Jelly", value, inc, min, max, |v| {
+                                        // core::ptr::write(items::GREEN_JELLY.address, *v);
+                                        items::spoils_bag::spoil(items::spoils_bag::GreenJelly, *v);
+                                    }),
+                                    Number::new("Blue Chu Jelly", value, inc, min, max, |v| {
+                                        // core::ptr::write(items::BLUE_JELLY.address, *v);
+                                        items::spoils_bag::spoil(items::spoils_bag::BlueJelly, *v);
+                                    }),
+                                    Number::new("Joy Pendant", value, inc, min, max, |v| {
                                         // core::ptr::write(items::JOY_PENDANT.address, *v);
                                         items::spoils_bag::spoil(items::spoils_bag::JoyPendant, *v);
                                     }),
-                                    Number::new(
-                                        "Boko Baba Seed",
-                                        value,
-                                        inc,
-                                        min,
-                                        max,
-                                        |v| unsafe {
-                                            // core::ptr::write(items::BOKO_SEEDS.address, *v);
-                                            items::spoils_bag::spoil(
-                                                items::spoils_bag::BokoSeed,
-                                                *v,
-                                            );
-                                        },
-                                    ),
-                                    Number::new(
-                                        "Golden Feather",
-                                        value,
-                                        inc,
-                                        min,
-                                        max,
-                                        |v| unsafe {
-                                            // core::ptr::write(items::GOLDEN_FEATHERS.address, *v);
-                                            items::spoils_bag::spoil(
-                                                items::spoils_bag::GoldenFeather,
-                                                *v,
-                                            );
-                                        },
-                                    ),
-                                    Number::new(
-                                        "Skull Necklace",
-                                        value,
-                                        inc,
-                                        min,
-                                        max,
-                                        |v| unsafe {
-                                            // core::ptr::write(items::SKULL_NECKLACES.address, *v);
-                                            items::spoils_bag::spoil(
-                                                items::spoils_bag::SkullNecklace,
-                                                *v,
-                                            );
-                                        },
-                                    ),
-                                    Number::new(
-                                        "Knight's Crest",
-                                        value,
-                                        inc,
-                                        min,
-                                        max,
-                                        |v| unsafe {
-                                            // core::ptr::write(items::KNIGHT_CREST.address, *v);
-                                            items::spoils_bag::spoil(
-                                                items::spoils_bag::KnightsCrest,
-                                                *v,
-                                            );
-                                        },
-                                    ),
+                                    Number::new("Boko Baba Seed", value, inc, min, max, |v| {
+                                        // core::ptr::write(items::BOKO_SEEDS.address, *v);
+                                        items::spoils_bag::spoil(items::spoils_bag::BokoSeed, *v);
+                                    }),
+                                    Number::new("Golden Feather", value, inc, min, max, |v| {
+                                        // core::ptr::write(items::GOLDEN_FEATHERS.address, *v);
+                                        items::spoils_bag::spoil(
+                                            items::spoils_bag::GoldenFeather,
+                                            *v,
+                                        );
+                                    }),
+                                    Number::new("Skull Necklace", value, inc, min, max, |v| {
+                                        // core::ptr::write(items::SKULL_NECKLACES.address, *v);
+                                        items::spoils_bag::spoil(
+                                            items::spoils_bag::SkullNecklace,
+                                            *v,
+                                        );
+                                    }),
+                                    Number::new("Knight's Crest", value, inc, min, max, |v| {
+                                        // core::ptr::write(items::KNIGHT_CREST.address, *v);
+                                        items::spoils_bag::spoil(
+                                            items::spoils_bag::KnightsCrest,
+                                            *v,
+                                        );
+                                    }),
                                 ]
                             }),
                         ],
@@ -1256,7 +1178,7 @@ impl Plugin for WWHDTrainer {
                             Select::new(
                                 &format!("{}", icons::BTN_X),
                                 spoof_items.clone(),
-                                |_, v| unsafe {
+                                |_, v| {
                                     // core::ptr::write(player::BUTTON_X, v.value);
                                     player::equipped_items::set(player::equipped_items::X, v.value);
                                 },
@@ -1264,7 +1186,7 @@ impl Plugin for WWHDTrainer {
                             Select::new(
                                 &format!("{}", icons::BTN_Y),
                                 spoof_items.clone(),
-                                |_, v| unsafe {
+                                |_, v| {
                                     // core::ptr::write(player::BUTTON_Y, v.value);
                                     player::equipped_items::set(player::equipped_items::Y, v.value);
                                 },
@@ -1272,7 +1194,7 @@ impl Plugin for WWHDTrainer {
                             Select::new(
                                 &format!("{}", icons::BTN_R),
                                 spoof_items.clone(),
-                                |_, v| unsafe {
+                                |_, v| {
                                     // core::ptr::write(player::BUTTON_R, v.value);
                                     player::equipped_items::set(player::equipped_items::R, v.value);
                                 },
@@ -1282,7 +1204,7 @@ impl Plugin for WWHDTrainer {
                     Menu::new(
                         "Coordinates",
                         vec![
-                            Text::new(|| unsafe {
+                            Text::new(|| {
                                 format!(
                                     "X: {:.2}, Y: {:.2}, Z: {:.2}",
                                     // core::ptr::read(player::position::X),
@@ -1294,20 +1216,20 @@ impl Plugin for WWHDTrainer {
                                 )
                             }),
                             Toggle::new("Show Speed", false, {
-                                let state = Arc::clone(&state);
+                                let state = Rc::clone(&state);
                                 move |v| {
                                     state.borrow_mut().speed_popup.show(v);
                                 }
                             }),
                             Button::new("Store position", {
-                                let state = Arc::clone(&state);
-                                move || unsafe {
+                                let state = Rc::clone(&state);
+                                move || {
                                     state.borrow_mut().player_pos.store();
                                 }
                             }),
                             Button::new("Restore position", {
-                                let state = Arc::clone(&state);
-                                move || unsafe {
+                                let state = Rc::clone(&state);
+                                move || {
                                     state.borrow_mut().player_pos.apply();
                                 }
                             }),
@@ -1345,7 +1267,7 @@ impl Plugin for WWHDTrainer {
                     Menu::new(
                         "Stage",
                         vec![
-                            Text::new(|| unsafe {
+                            Text::new(|| {
                                 // let stage = 0x109763f0 as *mut [u8; 8];
                                 // let spawn = 0x109763f9 as *mut u8;
                                 // let room = 0x109763fa as *mut u8;
@@ -1431,11 +1353,11 @@ impl Plugin for WWHDTrainer {
                                     locations::dungeons::WIND_TEMPLE,
                                     locations::dungeons::GANONS_TOWER,
                                 ],
-                                |_, v| unsafe {
+                                |_, v| {
                                     locations::teleport(v.value);
                                 },
                             ),
-                            Button::new("Reload stage", || unsafe {
+                            Button::new("Reload stage", || {
                                 stages::reload::activate();
                             }),
                             Select::new(
@@ -1445,7 +1367,7 @@ impl Plugin for WWHDTrainer {
                                     stages::daytime::Day,
                                     stages::daytime::Night,
                                 ],
-                                |_, v| unsafe {
+                                |_, v| {
                                     // core::ptr::write(stages::daytime::ADDRESS, v.value);
                                     stages::daytime::enable(v.value);
                                 },
@@ -1457,7 +1379,7 @@ impl Plugin for WWHDTrainer {
                                     stages::weather::Cloudy,
                                     stages::weather::Foggy,
                                 ],
-                                |_, v| unsafe {
+                                |_, v| {
                                     // core::ptr::write(stages::weather::ADDRESS, v.value);
                                     stages::weather::enable(v.value);
                                 },
@@ -1468,25 +1390,25 @@ impl Plugin for WWHDTrainer {
                         "Macros",
                         vec![
                             Toggle::new("MSS", false, {
-                                let state = Arc::clone(&state);
+                                let state = Rc::clone(&state);
                                 move |v| {
                                     state.borrow_mut().macros.mms.enabled = v;
                                 }
                             }),
                             Toggle::new("Zombie Hover", false, {
-                                let state = Arc::clone(&state);
+                                let state = Rc::clone(&state);
                                 move |v| {
                                     state.borrow_mut().macros.zombie_hover.enabled = v;
                                 }
                             }),
                             Toggle::new("Record", false, {
-                                let state = Arc::clone(&state);
+                                let state = Rc::clone(&state);
                                 move |v| {
                                     state.borrow_mut().recorder.start_recording(v);
                                 }
                             }),
                             Button::new("Play", {
-                                let state = Arc::clone(&state);
+                                let state = Rc::clone(&state);
                                 move || state.borrow_mut().recorder.start_playback()
                             }),
                         ],
