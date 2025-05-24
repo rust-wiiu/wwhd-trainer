@@ -9,9 +9,7 @@ use alloc::rc::Rc;
 use core::cell::RefCell;
 use notifications;
 use overlay;
-use wupf::{
-    hook_on_input, hook_on_update, hook_plugin, Handler, OnInput, OnUpdate, Plugin, StaticHandler,
-};
+use wupf::{hook_on_input, hook_on_update, hook_plugin, OnInput, OnUpdate, Plugin, PluginHandler};
 use wups::WUPS_PLUGIN_NAME;
 
 mod items;
@@ -32,6 +30,7 @@ fn is_windwaker() -> bool {
     )
 }
 
+#[derive(PluginHandler)]
 struct WWHDTrainer {
     active: bool,
     controller: Option<gamepad::Port>,
@@ -391,12 +390,12 @@ mod state {
     }
 }
 
-impl StaticHandler for WWHDTrainer {
-    fn handler() -> &'static Handler<Self> {
-        static HANDLER: Handler<WWHDTrainer> = Handler::new();
-        &HANDLER
-    }
-}
+// impl StaticHandler for WWHDTrainer {
+//     fn handler() -> &'static Handler<Self> {
+//         static HANDLER: Handler<WWHDTrainer> = Handler::new();
+//         &HANDLER
+//     }
+// }
 
 hook_plugin!(WWHDTrainer);
 impl Plugin for WWHDTrainer {

@@ -202,6 +202,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "04cbf5b083de1c7e0222a7a51dbfdba1cbe1c6ab0b15e29fff3f6c077fd9cd9f"
 
 [[package]]
+name = "macros"
+version = "0.1.0"
+source = "git+https://github.com/rust-wiiu/wupf?tag=v0.3.4#aae9bae5ca8bef27a340433e50d362bc08dc073c"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "math"
 version = "0.1.0"
 source = "git+https://github.com/rust-wiiu/wut?tag=v0.3.0#c7596933107e787213a8488092d1e205000ef4f8"
@@ -519,9 +529,10 @@ checksum = "589f6da84c646204747d1270a2a5661ea66ed1cced2631d546fdfb155959f9ec"
 
 [[package]]
 name = "wupf"
-version = "0.3.3"
-source = "git+https://github.com/rust-wiiu/wupf?tag=v0.3.3#de6e406bf8e09834abb1d331a01000d6b3ddb85a"
+version = "0.3.4"
+source = "git+https://github.com/rust-wiiu/wupf?tag=v0.3.4#aae9bae5ca8bef27a340433e50d362bc08dc073c"
 dependencies = [
+ "macros",
  "wups",
  "wut",
 ]
