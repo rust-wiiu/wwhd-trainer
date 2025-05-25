@@ -6,6 +6,7 @@ use wut::prelude::*;
 use wut::*;
 
 use alloc::rc::Rc;
+use alloc::sync::Arc;
 use core::cell::RefCell;
 use notifications;
 use overlay;
@@ -34,6 +35,7 @@ fn is_windwaker() -> bool {
 struct WWHDTrainer {
     active: bool,
     controller: Option<gamepad::Port>,
+    frame_advance: Rc<RefCell<FrameAdvance>>,
     state: Rc<RefCell<State>>,
     overlay: overlay::Overlay,
 }
@@ -255,6 +257,18 @@ mod state {
         }
     }
 
+    impl Macros {
+        pub fn run(&mut self, input: &mut gamepad::State) {
+            if self.mms.enabled {
+                self.mms.run_forever(input);
+            }
+
+            if self.zombie_hover.enabled {
+                self.zombie_hover.run_forever(input);
+            }
+        }
+    }
+
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     pub enum Mode {
         Idle,
@@ -390,6 +404,77 @@ mod state {
     }
 }
 
+struct FrameAdvance {
+    enabled: bool,
+    main: Option<wut::thread::Thread>,
+    control: Option<wut::thread::Thread>,
+    barrier: Arc<wut::sync::AutoEvent>,
+}
+
+impl FrameAdvance {
+    fn new() -> Rc<RefCell<Self>> {
+        Rc::new(RefCell::new(Self {
+            enabled: false,
+            main: None,
+            control: None,
+            barrier: Arc::new(wut::sync::AutoEvent::new()),
+        }))
+    }
+
+    fn enable(&mut self, enabled: bool) {
+        println!("enabled: {}", enabled);
+
+        if enabled && self.control.is_none() {
+            let barrier = Arc::clone(&self.barrier);
+            let main = self.main.unwrap();
+            self.control = Some(
+                *wut::thread::spawn(move || {
+                    let gp = gamepad::Gamepad::new(gamepad::Port::DRC);
+
+                    loop {
+                        barrier.wait();
+
+                        main.park();
+                        loop {
+                            if let Ok(input) = gp.poll() {
+                                if input.trigger.contains(gamepad::Button::LStick) {
+                                    main.unpark();
+                                    break;
+                                }
+                            }
+                        }
+                        main.unpark();
+                    }
+                })
+                .unwrap()
+                .thread(),
+            );
+        } else {
+            if let Some(t) = self.control.take() {
+                t.cancel();
+            }
+            self.main.unwrap().unpark();
+        }
+
+        self.enabled = enabled;
+    }
+
+    fn wait(&self) {
+        if self.enabled && self.control.is_some() {
+            self.barrier.signal();
+        }
+    }
+}
+
+impl Drop for FrameAdvance {
+    fn drop(&mut self) {
+        self.barrier.signal();
+        if let Some(t) = self.control {
+            t.cancel();
+        }
+    }
+}
+
 // impl StaticHandler for WWHDTrainer {
 //     fn handler() -> &'static Handler<Self> {
 //         static HANDLER: Handler<WWHDTrainer> = Handler::new();
@@ -402,7 +487,10 @@ impl Plugin for WWHDTrainer {
     fn on_init() -> Self {
         use overlay::*;
 
+        wut::logger::udp();
+
         let state = State::new();
+        let fa = FrameAdvance::new();
 
         let bottle_options = vec![
             ("None", items::bottles::Content::None),
@@ -461,10 +549,17 @@ impl Plugin for WWHDTrainer {
         Self {
             active: false,
             controller: None,
+            frame_advance: Rc::clone(&fa),
             state: Rc::clone(&state),
             overlay: Overlay::new(Menu::new(
                 "Root",
                 vec![
+                    Toggle::new("FA", false, {
+                        let fa = Rc::clone(&fa);
+                        move |v| {
+                            fa.borrow_mut().enable(v);
+                        }
+                    }),
                     Menu::new(
                         "Cheats",
                         vec![
@@ -1417,11 +1512,15 @@ impl Plugin for WWHDTrainer {
         }
     }
 
-    fn on_deinit(&mut self) {}
+    fn on_deinit(&mut self) {
+        wut::logger::deinit();
+    }
 
     fn on_start(&mut self) {
         if is_windwaker() {
             self.active = true;
+
+            self.frame_advance.borrow_mut().main = Some(wut::thread::current());
 
             let _ = notifications::info("WWHD Trainer started").show().unwrap();
         }
@@ -1429,6 +1528,7 @@ impl Plugin for WWHDTrainer {
 
     fn on_exit(&mut self) {
         self.active = false;
+        self.frame_advance.borrow_mut().main.take();
     }
 }
 
@@ -1460,19 +1560,11 @@ impl OnInput for WWHDTrainer {
                     input.trigger.clear();
                     input.release.clear();
 
-                    if state.macros.mms.enabled {
-                        state.macros.mms.run_forever(&mut input);
-                    }
-
-                    if state.macros.zombie_hover.enabled {
-                        state.macros.zombie_hover.run_forever(&mut input);
-                    }
+                    state.macros.run(&mut input);
                 } else {
                     self.controller = None;
                     self.overlay.hide();
                 }
-
-                // state.recorder.record(port, input);
             }
         } else {
             if input.hold.contains(combo) {
@@ -1482,6 +1574,23 @@ impl OnInput for WWHDTrainer {
         }
 
         self.state.borrow_mut().recorder.run(port, &mut input);
+
+        // if let Some(thread) = self.main_thread {
+        //     if input.trigger.contains(gamepad::Button::Plus) {
+        //         thread.park();
+
+        //         wut::thread::sleep(wut::time::Duration::from_secs(3));
+
+        //         thread.unpark();
+
+        //         input.trigger.retain(|f| f != gamepad::Button::Plus);
+        //         input.hold.retain(|f| f != gamepad::Button::Plus);
+        //     }
+
+        //     if input.trigger.contains(gamepad::Button::Minus) {
+        //         thread.unpark();
+        //     }
+        // }
 
         input
     }
@@ -1494,6 +1603,8 @@ impl OnUpdate for WWHDTrainer {
             return;
         }
 
+        // println!("{}", wut::time::DateTime::now());
+
         let mut state = self.state.borrow_mut();
 
         state.recorder.advance();
@@ -1501,5 +1612,7 @@ impl OnUpdate for WWHDTrainer {
         state.speed_popup.update();
 
         self.overlay.render();
+
+        self.frame_advance.borrow().wait();
     }
 }
