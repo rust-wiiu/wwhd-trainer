@@ -204,7 +204,7 @@ checksum = "04cbf5b083de1c7e0222a7a51dbfdba1cbe1c6ab0b15e29fff3f6c077fd9cd9f"
 [[package]]
 name = "macros"
 version = "0.1.0"
-source = "git+https://github.com/rust-wiiu/wupf?tag=v0.3.4#aae9bae5ca8bef27a340433e50d362bc08dc073c"
+source = "git+https://github.com/rust-wiiu/wupf?tag=v0.3.5#02b9926679d64be60a8f184fa8b935983229dce6"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -214,9 +214,10 @@ dependencies = [
 [[package]]
 name = "math"
 version = "0.1.0"
-source = "git+https://github.com/rust-wiiu/wut?tag=v0.3.0#c7596933107e787213a8488092d1e205000ef4f8"
+source = "git+https://github.com/rust-wiiu/wut?tag=v0.3.1#57f4c7b73543f58e3d69b01b28e471f68ab0e46a"
 dependencies = [
  "bindgen",
+ "semver",
 ]
 
 [[package]]
@@ -243,11 +244,12 @@ dependencies = [
 
 [[package]]
 name = "notifications"
-version = "0.3.0"
-source = "git+https://github.com/rust-wiiu/notifications?tag=v0.3.0#97431b8268ecaadf543bdb81129f46b48e4bea75"
+version = "0.3.1"
+source = "git+https://github.com/rust-wiiu/notifications?tag=v0.3.1#94d290305d1d378b514e408e748089541889de71"
 dependencies = [
  "bindgen",
  "flagset",
+ "semver",
  "thiserror",
  "wut",
 ]
@@ -269,8 +271,8 @@ checksum = "945462a4b81e43c4e3ba96bd7b49d834c6f61198356aa858733bc4acf3cbe62e"
 
 [[package]]
 name = "overlay"
-version = "0.3.1"
-source = "git+https://github.com/rust-wiiu/overlay?tag=v0.3.1#5a9c22dbf8986a31366f3727633f93c82f96113d"
+version = "0.3.2"
+source = "git+https://github.com/rust-wiiu/overlay?tag=v0.3.2#ccca6fc361912d312163a4b2bd4ac3f80bcadddc"
 dependencies = [
  "notifications",
  "wut",
@@ -346,6 +348,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f7c45b9784283f1b2e7fb61b42047c2fd678ef0960d4f6f1eba131594cc369d4"
 
 [[package]]
+name = "semver"
+version = "1.0.26"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "56e6fa9c48d24d85fb3de5ad847117517440f6beceb7798af16b4a87d616b8d0"
+
+[[package]]
 name = "shlex"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -365,9 +373,10 @@ dependencies = [
 [[package]]
 name = "sys"
 version = "0.1.0"
-source = "git+https://github.com/rust-wiiu/wut?tag=v0.3.0#c7596933107e787213a8488092d1e205000ef4f8"
+source = "git+https://github.com/rust-wiiu/wut?tag=v0.3.1#57f4c7b73543f58e3d69b01b28e471f68ab0e46a"
 dependencies = [
  "bindgen",
+ "semver",
 ]
 
 [[package]]
@@ -529,8 +538,8 @@ checksum = "589f6da84c646204747d1270a2a5661ea66ed1cced2631d546fdfb155959f9ec"
 
 [[package]]
 name = "wupf"
-version = "0.3.4"
-source = "git+https://github.com/rust-wiiu/wupf?tag=v0.3.4#aae9bae5ca8bef27a340433e50d362bc08dc073c"
+version = "0.3.5"
+source = "git+https://github.com/rust-wiiu/wupf?tag=v0.3.5#02b9926679d64be60a8f184fa8b935983229dce6"
 dependencies = [
  "macros",
  "wups",
@@ -539,8 +548,8 @@ dependencies = [
 
 [[package]]
 name = "wups"
-version = "0.3.2"
-source = "git+https://github.com/rust-wiiu/wups?tag=v0.3.2#caae59f0fb9761c6769df77b79f655ecb3736083"
+version = "0.3.3"
+source = "git+https://github.com/rust-wiiu/wups?tag=v0.3.3#7906e0e3974b32314e612930e1f90afcd8869ecc"
 dependencies = [
  "bindgen",
  "flagset",
@@ -552,7 +561,7 @@ dependencies = [
 [[package]]
 name = "wups-macros"
 version = "0.1.0"
-source = "git+https://github.com/rust-wiiu/wups?tag=v0.3.2#caae59f0fb9761c6769df77b79f655ecb3736083"
+source = "git+https://github.com/rust-wiiu/wups?tag=v0.3.3#7906e0e3974b32314e612930e1f90afcd8869ecc"
 dependencies = [
  "chrono",
  "proc-macro2",
@@ -562,8 +571,8 @@ dependencies = [
 
 [[package]]
 name = "wut"
-version = "0.3.0"
-source = "git+https://github.com/rust-wiiu/wut?tag=v0.3.0#c7596933107e787213a8488092d1e205000ef4f8"
+version = "0.3.1"
+source = "git+https://github.com/rust-wiiu/wut?tag=v0.3.1#57f4c7b73543f58e3d69b01b28e471f68ab0e46a"
 dependencies = [
  "flagset",
  "math",
@@ -575,7 +584,7 @@ dependencies = [
 [[package]]
 name = "wut-macros"
 version = "0.1.0"
-source = "git+https://github.com/rust-wiiu/wut?tag=v0.3.0#c7596933107e787213a8488092d1e205000ef4f8"
+source = "git+https://github.com/rust-wiiu/wut?tag=v0.3.1#57f4c7b73543f58e3d69b01b28e471f68ab0e46a"
 dependencies = [
  "proc-macro2",
  "quote",

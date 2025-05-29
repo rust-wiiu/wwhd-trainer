@@ -9,9 +9,9 @@ repository = "https://github.com/rust-wiiu/wwhd-trainer"
 publish = false
 
 [dependencies]
-wut = { git = "https://github.com/rust-wiiu/wut", tag = "v0.3.0" }
-wups = { git = "https://github.com/rust-wiiu/wups", tag = "v0.3.2" }
-overlay = { git = "https://github.com/rust-wiiu/overlay", tag = "v0.3.1" }
-notifications = { git = "https://github.com/rust-wiiu/notifications", tag = "v0.3.0" }
-wupf = { git = "https://github.com/rust-wiiu/wupf", tag = "v0.3.4", features = ["derive"] }
+wut = { git = "https://github.com/rust-wiiu/wut", tag = "v0.3.1" }
+wups = { git = "https://github.com/rust-wiiu/wups", tag = "v0.3.3" }
+overlay = { git = "https://github.com/rust-wiiu/overlay", tag = "v0.3.2" }
+notifications = { git = "https://github.com/rust-wiiu/notifications", tag = "v0.3.1" }
+wupf = { git = "https://github.com/rust-wiiu/wupf", tag = "v0.3.5", features = ["derive"] }
 # wupf = { path = "../wupf", features = ["derive"]}
