@@ -31,461 +31,190 @@ pub enum Item {
     MasterSword3 = 0x3e,
 }
 
-pub mod bait_bag {
-    pub const ADDRESS: *mut u8 = 0x1506b547 as *mut u8;
+macro_rules! item_module {
+    ($module_name:ident, $address:expr, $item:path) => {
+        pub mod $module_name {
+            pub const ADDRESS: *mut u8 = $address as *mut u8;
 
-    #[inline]
-    pub fn set(value: u8) {
-        unsafe {
-            core::ptr::write(ADDRESS, value);
+            #[inline]
+            pub fn write(value: u8) {
+                unsafe {
+                    core::ptr::write(ADDRESS, value);
+                }
+            }
+
+            #[inline]
+            pub fn read() -> u8 {
+                unsafe { core::ptr::read(ADDRESS) }
+            }
+
+            #[inline]
+            pub fn enable(enable: bool) {
+                if enable {
+                    write($item as u8);
+                } else {
+                    write(0);
+                }
+            }
+            #[inline]
+            pub fn enabled() -> bool {
+                read() == $item as u8
+            }
         }
-    }
-
-    #[inline]
-    pub fn get() -> u8 {
-        unsafe { core::ptr::read(ADDRESS) }
-    }
-
-    #[inline]
-    pub fn enable() {
-        set(super::Item::BaitBag as u8);
-    }
-
-    #[inline]
-    pub fn disable() {
-        set(0);
-    }
+    };
 }
 
-pub mod bombs {
-    pub const ADDRESS: *mut u8 = 0x1506b549 as *mut u8;
+macro_rules! item_module_with_versions {
+    ($module_name:ident, $address:expr, [$(($variant:ident, $value:expr)),*]) => {
+        pub mod $module_name {
+            pub const ADDRESS: *mut u8 = $address as *mut u8;
 
-    #[inline]
-    pub fn set(value: u8) {
-        unsafe {
-            core::ptr::write(ADDRESS, value);
+            #[derive(Debug, Clone, Copy, PartialEq)]
+            pub enum Version {
+                $(
+                    $variant = $value as isize,
+                )*
+            }
+
+            #[allow(unused_imports)]
+            pub use Version::*;
+
+            #[inline]
+            pub fn write(value: u8) {
+                unsafe {
+                    core::ptr::write(ADDRESS, value);
+                }
+            }
+
+            #[inline]
+            pub fn read() -> u8 {
+                unsafe { core::ptr::read(ADDRESS) }
+            }
+
+            #[inline]
+            pub fn set(version: Option<Version>) {
+                if let Some(version) = version {
+                    write(version as u8);
+                } else {
+                    write(0xff);
+                }
+            }
+
+            #[inline]
+            pub fn get() -> Option<Version> {
+                match read() {
+                    $(
+                        x if x == Version::$variant as u8 => Some(Version::$variant),
+                    )*
+                    _ => None
+                }
+            }
+
+            #[inline]
+            pub fn enabled() -> bool {
+                get().is_some()
+            }
         }
-    }
-
-    #[inline]
-    pub fn get() -> u8 {
-        unsafe { core::ptr::read(ADDRESS) }
-    }
-
-    #[inline]
-    pub fn enable() {
-        set(super::Item::Bombs as u8);
-    }
-
-    #[inline]
-    pub fn disable() {
-        set(0);
-    }
+    };
 }
 
-pub mod boomerang {
-    pub const ADDRESS: *mut u8 = 0x1506b541 as *mut u8;
+item_module!(bait_bag, 0x1506b547, super::Item::BaitBag);
 
-    #[inline]
-    pub fn set(value: u8) {
-        unsafe {
-            core::ptr::write(ADDRESS, value);
-        }
-    }
+item_module!(bombs, 0x1506b549, super::Item::Bombs);
 
-    #[inline]
-    pub fn get() -> u8 {
-        unsafe { core::ptr::read(ADDRESS) }
-    }
+item_module!(boomerang, 0x1506b541, super::Item::Boomerang);
 
-    #[inline]
-    pub fn enable() {
-        set(super::Item::Boomerang as u8);
-    }
+item_module!(deku_leaf, 0x1506b542, super::Item::DekuLeaf);
 
-    #[inline]
-    pub fn disable() {
-        set(0);
-    }
-}
+item_module!(delivery_bag, 0x1506b54e, super::Item::DeliveryBag);
 
-pub mod deku_leaf {
-    pub const ADDRESS: *mut u8 = 0x1506b542 as *mut u8;
+item_module_with_versions!(
+    picto_box,
+    0x1506b544,
+    [
+        (Normal, super::Item::PictoBox),
+        (Deluxe, super::Item::DeluxeBox)
+    ]
+);
 
-    #[inline]
-    pub fn set(value: u8) {
-        unsafe {
-            core::ptr::write(ADDRESS, value);
-        }
-    }
+item_module!(grappling_hook, 0x1506b53f, super::Item::GrapplingHook);
 
-    #[inline]
-    pub fn get() -> u8 {
-        unsafe { core::ptr::read(ADDRESS) }
-    }
+item_module_with_versions!(
+    bow,
+    0x1506b548,
+    [
+        (Hero, super::Item::HeroBow),
+        (Elemental, super::Item::ElementalBow),
+        (Magical, super::Item::MagicalBow)
+    ]
+);
 
-    #[inline]
-    pub fn enable() {
-        set(super::Item::DekuLeaf as u8);
-    }
+item_module!(hero_charm, 0x1506b5b8, super::Item::HeroCharm);
 
-    #[inline]
-    pub fn disable() {
-        set(0);
-    }
-}
+item_module_with_versions!(
+    shield,
+    0x1506b50f,
+    [
+        (Hero, super::Item::HeroShield),
+        (Mirror, super::Item::MirrorShield)
+    ]
+);
 
-pub mod delivery_bag {
-    pub const ADDRESS: *mut u8 = 0x1506b54e as *mut u8;
+item_module_with_versions!(
+    sword,
+    0x1506b50e,
+    [
+        (Hero, super::Item::HeroSword),
+        (Master1, super::Item::MasterSword1),
+        (Master2, super::Item::MasterSword2),
+        (Master3, super::Item::MasterSword3)
+    ]
+);
 
-    #[inline]
-    pub fn set(value: u8) {
-        unsafe {
-            core::ptr::write(ADDRESS, value);
-        }
-    }
-
-    #[inline]
-    pub fn get() -> u8 {
-        unsafe { core::ptr::read(ADDRESS) }
-    }
-
-    #[inline]
-    pub fn enable() {
-        set(super::Item::DeliveryBag as u8);
-    }
-
-    #[inline]
-    pub fn disable() {
-        set(0);
-    }
-}
-
-pub mod picto_box {
-    pub const ADDRESS: *mut u8 = 0x1506b544 as *mut u8;
-
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    pub enum Version {
-        None = 0xff,
-        Normal = super::Item::PictoBox as isize,
-        Delux = super::Item::DeluxeBox as isize,
-    }
-
-    #[inline]
-    pub fn set(value: u8) {
-        unsafe {
-            core::ptr::write(ADDRESS, value);
-        }
-    }
-
-    #[inline]
-    pub fn get() -> u8 {
-        unsafe { core::ptr::read(ADDRESS) }
-    }
-
-    #[inline]
-    pub fn enable(version: Version) {
-        set(version as u8);
-    }
-
-    #[inline]
-    pub fn disable() {
-        set(Version::None as u8);
-    }
-}
-
-pub mod grappling_hook {
-    pub const ADDRESS: *mut u8 = 0x1506b53f as *mut u8;
-
-    #[inline]
-    pub fn set(value: u8) {
-        unsafe {
-            core::ptr::write(ADDRESS, value);
-        }
-    }
-
-    #[inline]
-    pub fn get() -> u8 {
-        unsafe { core::ptr::read(ADDRESS) }
-    }
-
-    #[inline]
-    pub fn enable() {
-        set(super::Item::GrapplingHook as u8);
-    }
-
-    #[inline]
-    pub fn disable() {
-        set(0);
-    }
-}
-
-pub mod bow {
-    pub const ADDRESS: *mut u8 = 0x1506b548 as *mut u8;
-
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    pub enum Version {
-        None = 0,
-        Hero = super::Item::HeroBow as isize,
-        Elemental = super::Item::ElementalBow as isize,
-        Magical = super::Item::MagicalBow as isize,
-    }
-
-    #[inline]
-    pub fn set(value: u8) {
-        unsafe {
-            core::ptr::write(ADDRESS, value);
-        }
-    }
-
-    #[inline]
-    pub fn get() -> u8 {
-        unsafe { core::ptr::read(ADDRESS) }
-    }
-
-    #[inline]
-    pub fn enable(version: Version) {
-        set(version as u8);
-    }
-
-    #[inline]
-    pub fn disable() {
-        set(Version::None as u8);
-    }
-}
-
-pub mod hero_charm {
-    pub const ADDRESS: *mut u8 = 0x1506b5b8 as *mut u8;
-
-    #[inline]
-    pub fn set(value: u8) {
-        unsafe {
-            core::ptr::write(ADDRESS, value);
-        }
-    }
-
-    #[inline]
-    pub fn get() -> u8 {
-        unsafe { core::ptr::read(ADDRESS) }
-    }
-
-    #[inline]
-    pub fn enable() {
-        set(super::Item::HeroCharm as u8);
-    }
-
-    #[inline]
-    pub fn disable() {
-        set(0);
-    }
-}
-
-pub mod shield {
-    pub const ADDRESS: *mut u8 = 0x1506b50f as *mut u8;
-
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    pub enum Version {
-        None = 0xff,
-        Hero = super::Item::HeroShield as isize,
-        Mirror = super::Item::MirrorShield as isize,
-    }
-
-    #[inline]
-    pub fn set(value: u8) {
-        unsafe {
-            core::ptr::write(ADDRESS, value);
-        }
-    }
-
-    #[inline]
-    pub fn get() -> u8 {
-        unsafe { core::ptr::read(ADDRESS) }
-    }
-
-    #[inline]
-    pub fn enable(version: Version) {
-        set(version as u8);
-    }
-
-    #[inline]
-    pub fn disable() {
-        set(Version::None as u8);
-    }
-}
-
-pub mod sword {
-    pub const ADDRESS: *mut u8 = 0x1506b50e as *mut u8;
-
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    pub enum Version {
-        None = 0xff,
-        Hero = super::Item::HeroSword as isize,
-        Master1 = super::Item::MasterSword1 as isize,
-        Master2 = super::Item::MasterSword2 as isize,
-        Master3 = super::Item::MasterSword3 as isize,
-    }
-
-    #[inline]
-    pub fn set(value: u8) {
-        unsafe {
-            core::ptr::write(ADDRESS, value);
-        }
-    }
-
-    #[inline]
-    pub fn get() -> u8 {
-        unsafe { core::ptr::read(ADDRESS) }
-    }
-
-    #[inline]
-    pub fn enable(version: Version) {
-        set(version as u8);
-    }
-
-    #[inline]
-    pub fn disable() {
-        set(Version::None as u8);
-    }
-}
-
-pub mod hookshot {
-    pub const ADDRESS: *mut u8 = 0x1506b54f as *mut u8;
-
-    #[inline]
-    pub fn set(value: u8) {
-        unsafe {
-            core::ptr::write(ADDRESS, value);
-        }
-    }
-
-    #[inline]
-    pub fn get() -> u8 {
-        unsafe { core::ptr::read(ADDRESS) }
-    }
-
-    #[inline]
-    pub fn enable() {
-        set(super::Item::Hookshot as u8);
-    }
-
-    #[inline]
-    pub fn disable() {
-        set(0);
-    }
-}
-
-pub mod iron_boots {
-    pub const ADDRESS: *mut u8 = 0x1506b545 as *mut u8;
-
-    #[inline]
-    pub fn set(value: u8) {
-        unsafe {
-            core::ptr::write(ADDRESS, value);
-        }
-    }
-
-    #[inline]
-    pub fn get() -> u8 {
-        unsafe { core::ptr::read(ADDRESS) }
-    }
-
-    #[inline]
-    pub fn enable() {
-        set(super::Item::IronBoots as u8);
-    }
-
-    #[inline]
-    pub fn disable() {
-        set(0);
-    }
-}
-
-pub mod magic_armor {
-    pub const ADDRESS: *mut u8 = 0x1506b546 as *mut u8;
-
-    #[inline]
-    pub fn set(value: u8) {
-        unsafe {
-            core::ptr::write(ADDRESS, value);
-        }
-    }
-
-    #[inline]
-    pub fn get() -> u8 {
-        unsafe { core::ptr::read(ADDRESS) }
-    }
-
-    #[inline]
-    pub fn enable() {
-        set(super::Item::MagicArmor as u8);
-    }
-
-    #[inline]
-    pub fn disable() {
-        set(0);
-    }
-}
+item_module!(hookshot, 0x1506b54f, super::Item::Hookshot);
+item_module!(iron_boots, 0x1506b545, super::Item::IronBoots);
+item_module!(magic_armor, 0x1506b546, super::Item::MagicArmor);
 
 pub mod power_bracelets {
-    pub const ADDRESS_1: *mut u8 = 0x1506b510 as *mut u8;
-    pub const ADDRESS_2: *mut u8 = 0x1506b5b6 as *mut u8;
+    pub const ADDRESS: (*mut u8, *mut u8) = (0x1506b510 as *mut u8, 0x1506b5b6 as *mut u8);
 
     #[inline]
-    pub fn set(value1: u8, value2: u8) {
+    pub fn write(value1: u8, value2: u8) {
         unsafe {
-            core::ptr::write(ADDRESS_1, value1);
-            core::ptr::write(ADDRESS_2, value2);
+            core::ptr::write(ADDRESS.0, value1);
+            core::ptr::write(ADDRESS.1, value2);
         }
     }
 
     #[inline]
-    pub fn get() -> (u8, u8) {
-        unsafe { (core::ptr::read(ADDRESS_1), core::ptr::read(ADDRESS_2)) }
+    pub fn read() -> (u8, u8) {
+        unsafe { (core::ptr::read(ADDRESS.0), core::ptr::read(ADDRESS.1)) }
     }
 
     #[inline]
-    pub fn enable() {
-        set(super::Item::PowerBracelets as u8, 0xff);
-    }
-
-    #[inline]
-    pub fn disable() {
-        set(0xff, 0);
-    }
-}
-
-pub mod skull_hammer {
-    pub const ADDRESS: *mut u8 = 0x1506b550 as *mut u8;
-
-    #[inline]
-    pub fn set(value: u8) {
-        unsafe {
-            core::ptr::write(ADDRESS, value);
+    pub fn enable(enable: bool) {
+        if enable {
+            write(super::Item::PowerBracelets as u8, 0xff);
+        } else {
+            write(0xff, 0);
         }
     }
 
     #[inline]
-    pub fn get() -> u8 {
-        unsafe { core::ptr::read(ADDRESS) }
-    }
-
-    #[inline]
-    pub fn enable() {
-        set(super::Item::SkullHammer as u8);
-    }
-
-    #[inline]
-    pub fn disable() {
-        set(0);
+    pub fn enabled() -> bool {
+        let (value1, value2) = read();
+        value1 == super::Item::PowerBracelets as u8 && value2 == 0xff
     }
 }
+
+item_module!(skull_hammer, 0x1506b550, super::Item::SkullHammer);
 
 pub mod spoils_bag {
     pub const ADDRESS: *mut u8 = 0x1506b540 as *mut u8;
 
     pub use Spoil::*;
 
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum Spoil {
         SkullNecklace = 0x1506b59c,
         BokoSeed = 0x1506b59d,
@@ -498,25 +227,29 @@ pub mod spoils_bag {
     }
 
     #[inline]
-    pub fn set(value: u8) {
+    pub fn write(value: u8) {
         unsafe {
             core::ptr::write(ADDRESS, value);
         }
     }
 
     #[inline]
-    pub fn get() -> u8 {
+    pub fn read() -> u8 {
         unsafe { core::ptr::read(ADDRESS) }
     }
 
     #[inline]
-    pub fn enable() {
-        set(super::Item::SpoilsBag as u8);
+    pub fn enable(enable: bool) {
+        if enable {
+            write(super::Item::SpoilsBag as u8);
+        } else {
+            write(0);
+        }
     }
 
     #[inline]
-    pub fn disable() {
-        set(0);
+    pub fn enabled() -> bool {
+        read() == super::Item::SpoilsBag as u8
     }
 
     #[inline]
@@ -527,121 +260,16 @@ pub mod spoils_bag {
     }
 }
 
-pub mod telescope {
-    pub const ADDRESS: *mut u8 = 0x1506b53c as *mut u8;
+item_module!(telescope, 0x1506b53c, super::Item::Telescope);
+item_module!(tingle_bottle, 0x1506b543, super::Item::TingleBottle);
+item_module!(wind_waker, 0x1506b53e, super::Item::WindWaker);
 
-    #[inline]
-    pub fn set(value: u8) {
-        unsafe {
-            core::ptr::write(ADDRESS, value);
-        }
-    }
-
-    #[inline]
-    pub fn get() -> u8 {
-        unsafe { core::ptr::read(ADDRESS) }
-    }
-
-    #[inline]
-    pub fn enable() {
-        set(super::Item::Telescope as u8);
-    }
-
-    #[inline]
-    pub fn disable() {
-        set(0);
-    }
-}
-
-pub mod tingle_bottle {
-    pub const ADDRESS: *mut u8 = 0x1506b543 as *mut u8;
-
-    #[inline]
-    pub fn set(value: u8) {
-        unsafe {
-            core::ptr::write(ADDRESS, value);
-        }
-    }
-
-    #[inline]
-    pub fn get() -> u8 {
-        unsafe { core::ptr::read(ADDRESS) }
-    }
-
-    #[inline]
-    pub fn enable() {
-        set(super::Item::TingleBottle as u8);
-    }
-
-    #[inline]
-    pub fn disable() {
-        set(0);
-    }
-}
-
-pub mod wind_waker {
-    pub const ADDRESS: *mut u8 = 0x1506b53e as *mut u8;
-
-    #[inline]
-    pub fn set(value: u8) {
-        unsafe {
-            core::ptr::write(ADDRESS, value);
-        }
-    }
-
-    #[inline]
-    pub fn get() -> u8 {
-        unsafe { core::ptr::read(ADDRESS) }
-    }
-
-    #[inline]
-    pub fn enable() {
-        set(super::Item::WindWaker as u8);
-    }
-
-    #[inline]
-    pub fn disable() {
-        set(0);
-    }
-}
-
-pub mod sail {
-    pub const ADDRESS: *mut u8 = 0x1506b53d as *mut u8;
-
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    pub enum Version {
-        None = 0xff,
-        Normal = 0x78,
-        Swift = 0x77,
-    }
-
-    #[inline]
-    pub fn set(value: u8) {
-        unsafe {
-            core::ptr::write(ADDRESS, value);
-        }
-    }
-
-    #[inline]
-    pub fn get() -> u8 {
-        unsafe { core::ptr::read(ADDRESS) }
-    }
-
-    #[inline]
-    pub fn enable(version: Version) {
-        set(version as u8);
-    }
-
-    #[inline]
-    pub fn disable() {
-        set(Version::None as u8);
-    }
-}
+item_module_with_versions!(sail, 0x1506b53d, [(Normal, 0x78), (Swift, 0x77)]);
 
 pub mod bottles {
     pub const ADDRESS: *mut [u8; 4] = 0x1506b54a as *mut [u8; 4];
 
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum Slot {
         Bottle1 = 0,
         Bottle2 = 1,
@@ -649,9 +277,8 @@ pub mod bottles {
         Bottle4 = 3,
     }
 
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum Content {
-        None = 0xff,
         Empty = 0x50,
         RedElixir = 0x51,
         GreenElixir = 0x52,
@@ -664,30 +291,32 @@ pub mod bottles {
         MagicWater = 0x59,
     }
 
+    #[allow(unused_imports)]
+    pub use Content::*;
+    #[allow(unused_imports)]
+    pub use Slot::*;
+
     #[inline]
-    pub fn set(value: [u8; 4]) {
+    pub fn write(value: [u8; 4]) {
         unsafe {
             core::ptr::write(ADDRESS, value);
         }
     }
 
     #[inline]
-    pub fn get() -> [u8; 4] {
+    pub fn read() -> [u8; 4] {
         unsafe { core::ptr::read(ADDRESS) }
     }
 
     #[inline]
-    pub fn enable(slot: Slot, content: Content) {
-        let mut bottles = get();
-        bottles[slot as usize] = content as u8;
-        set(bottles);
-    }
-
-    #[inline]
-    pub fn disable(slot: Slot) {
-        let mut bottles = get();
-        bottles[slot as usize] = Content::None as u8;
-        set(bottles);
+    pub fn set(slot: Slot, content: Option<Content>) {
+        let mut bottles = read();
+        if let Some(content) = content {
+            bottles[slot as usize] = content as u8;
+        } else {
+            bottles[slot as usize] = 0xff;
+        }
+        write(bottles);
     }
 }
 
@@ -704,26 +333,28 @@ pub mod songs {
         SongOfPassing = 0b0010_0000,
     }
 
+    #[allow(unused_imports)]
+    pub use Song::*;
+
     #[inline]
-    pub fn set(value: u8) {
+    pub fn write(value: u8) {
         unsafe {
             core::ptr::write(ADDRESS, value);
         }
     }
 
     #[inline]
-    pub fn get() -> u8 {
+    pub fn read() -> u8 {
         unsafe { core::ptr::read(ADDRESS) }
     }
 
     #[inline]
-    pub fn enable(song: Song) {
-        set(get() | song as u8);
-    }
-
-    #[inline]
-    pub fn disable(song: Song) {
-        set(get() & !(song as u8));
+    pub fn enable(enable: bool, song: Song) {
+        if enable {
+            write(read() | song as u8);
+        } else {
+            write(read() & !(song as u8));
+        }
     }
 }
 
@@ -732,20 +363,20 @@ pub mod triforce {
     pub const MAX: u8 = 8;
 
     #[inline]
-    pub fn set(value: u8) {
+    pub fn write(value: u8) {
         unsafe {
             core::ptr::write(ADDRESS, value);
         }
     }
 
     #[inline]
-    pub fn get() -> u8 {
+    pub fn read() -> u8 {
         unsafe { core::ptr::read(ADDRESS) }
     }
 
     #[inline]
-    pub fn enable(pieces: u8) {
-        set(match pieces {
+    pub fn set(pieces: u8) {
+        write(match pieces {
             0 => 0b0000_0000,
             1 => 0b0000_0001,
             2 => 0b0000_0011,
@@ -759,41 +390,43 @@ pub mod triforce {
     }
 
     #[inline]
-    pub fn disable() {
-        set(0);
+    pub fn get() -> u8 {
+        read().count_ones() as u8
     }
 }
 
 pub mod pearls {
     pub const ADDRESS: *mut u8 = 0x1506b5bf as *mut u8;
 
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum Pearl {
         Nayru = 0b0000_0001,
         Din = 0b0000_0010,
         Farore = 0b0000_0100,
     }
 
+    #[allow(unused_imports)]
+    pub use Pearl::*;
+
     #[inline]
-    pub fn set(value: u8) {
+    pub fn write(value: u8) {
         unsafe {
             core::ptr::write(ADDRESS, value);
         }
     }
 
     #[inline]
-    pub fn get() -> u8 {
+    pub fn read() -> u8 {
         unsafe { core::ptr::read(ADDRESS) }
     }
 
     #[inline]
-    pub fn enable(pearl: Pearl) {
-        set(get() | pearl as u8);
-    }
-
-    #[inline]
-    pub fn disable(pearl: Pearl) {
-        set(get() & !(pearl as u8));
+    pub fn enable(enable: bool, pearl: Pearl) {
+        if enable {
+            write(read() | pearl as u8);
+        } else {
+            write(read() & !(pearl as u8));
+        }
     }
 }
 
@@ -814,7 +447,6 @@ pub mod mailbag {
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     pub enum Content {
-        None = 0xff,
         TownFlower = 0x8c,
         SeaFlower = 0x8d,
         ExoticFlower = 0x8e,
@@ -836,30 +468,32 @@ pub mod mailbag {
         FillUpCoupon = 0x9e,
     }
 
+    #[allow(unused_imports)]
+    pub use Content::*;
+    #[allow(unused_imports)]
+    pub use Slot::*;
+
     #[inline]
-    pub fn set(value: [u8; 8]) {
+    pub fn write(value: [u8; 8]) {
         unsafe {
             core::ptr::write(ADDRESS, value);
         }
     }
 
     #[inline]
-    pub fn get() -> [u8; 8] {
+    pub fn read() -> [u8; 8] {
         unsafe { core::ptr::read(ADDRESS) }
     }
 
     #[inline]
-    pub fn enable(slot: Slot, content: Content) {
-        let mut bag = get();
-        bag[slot as usize] = content as u8;
-        set(bag);
-    }
-
-    #[inline]
-    pub fn disable(slot: Slot) {
-        let mut bag = get();
-        bag[slot as usize] = Content::None as u8;
-        set(bag);
+    pub fn set(slot: Slot, content: Option<Content>) {
+        let mut bag = read();
+        if let Some(content) = content {
+            bag[slot as usize] = content as u8;
+        } else {
+            bag[slot as usize] = 0xff;
+        }
+        write(bag);
     }
 }
 
@@ -868,25 +502,20 @@ pub mod dungeon_keys {
     pub const MAX: u8 = 10;
 
     #[inline]
-    pub fn set(value: u8) {
+    pub fn write(value: u8) {
         unsafe {
             core::ptr::write(ADDRESS, value);
         }
     }
 
     #[inline]
-    pub fn get() -> u8 {
+    pub fn read() -> u8 {
         unsafe { core::ptr::read(ADDRESS) }
     }
 
     #[inline]
-    pub fn enable(count: u8) {
-        set(if count <= 10 { count } else { 10 });
-    }
-
-    #[inline]
-    pub fn disable() {
-        set(0);
+    pub fn set(count: u8) {
+        write(if count <= 10 { count } else { 10 });
     }
 }
 
@@ -902,25 +531,27 @@ pub mod dungeon_items {
         BossKey = 0b0000_0100,
     }
 
+    #[allow(unused_imports)]
+    pub use Item::*;
+
     #[inline]
-    pub fn set(value: u8) {
+    pub fn write(value: u8) {
         unsafe {
             core::ptr::write(ADDRESS, value);
         }
     }
 
     #[inline]
-    pub fn get() -> u8 {
+    pub fn read() -> u8 {
         unsafe { core::ptr::read(ADDRESS) }
     }
 
     #[inline]
-    pub fn enable(item: Item) {
-        set(get() | item as u8);
-    }
-
-    #[inline]
-    pub fn disable(item: Item) {
-        set(get() & !(item as u8));
+    pub fn enable(enable: bool, item: Item) {
+        if enable {
+            write(read() | item as u8);
+        } else {
+            write(read() & !(item as u8));
+        }
     }
 }

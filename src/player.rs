@@ -8,14 +8,14 @@ pub mod air {
     pub const MAX: u32 = 900;
 
     #[inline]
-    pub fn set(value: u32) {
+    pub fn write(value: u32) {
         unsafe {
             core::ptr::write(ADDRESS, value);
         }
     }
 
     #[inline]
-    pub fn get() -> u32 {
+    pub fn read() -> u32 {
         unsafe { core::ptr::read(ADDRESS) }
     }
 }
@@ -26,14 +26,14 @@ pub mod health {
     pub const MAX: u8 = 80;
 
     #[inline]
-    pub fn set(value: u8) {
+    pub fn write(value: u8) {
         unsafe {
             core::ptr::write(ADDRESS, value);
         }
     }
 
     #[inline]
-    pub fn get() -> u8 {
+    pub fn read() -> u8 {
         unsafe { core::ptr::read(ADDRESS) }
     }
 }
@@ -44,14 +44,14 @@ pub mod containers {
     pub const MAX: u8 = 80;
 
     #[inline]
-    pub fn set(value: u8) {
+    pub fn write(value: u8) {
         unsafe {
             core::ptr::write(ADDRESS, value);
         }
     }
 
     #[inline]
-    pub fn get() -> u8 {
+    pub fn read() -> u8 {
         unsafe { core::ptr::read(ADDRESS) }
     }
 }
@@ -62,14 +62,14 @@ pub mod magic {
     pub const MAX: u8 = 32;
 
     #[inline]
-    pub fn set(value: u8) {
+    pub fn write(value: u8) {
         unsafe {
             core::ptr::write(ADDRESS, value);
         }
     }
 
     #[inline]
-    pub fn get() -> u8 {
+    pub fn read() -> u8 {
         unsafe { core::ptr::read(ADDRESS) }
     }
 }
@@ -82,14 +82,14 @@ pub mod max_magic {
     pub const DOUBLE: u8 = 32;
 
     #[inline]
-    pub fn set(value: u8) {
+    pub fn write(value: u8) {
         unsafe {
             core::ptr::write(ADDRESS, value);
         }
     }
 
     #[inline]
-    pub fn get() -> u8 {
+    pub fn read() -> u8 {
         unsafe { core::ptr::read(ADDRESS) }
     }
 }
@@ -100,14 +100,14 @@ pub mod rupees {
     pub const MAX: u16 = 5000;
 
     #[inline]
-    pub fn set(value: u16) {
+    pub fn write(value: u16) {
         unsafe {
             core::ptr::write(ADDRESS, value);
         }
     }
 
     #[inline]
-    pub fn get() -> u16 {
+    pub fn read() -> u16 {
         unsafe { core::ptr::read(ADDRESS) }
     }
 }
@@ -118,14 +118,14 @@ pub mod arrows {
     pub const MAX: u8 = 99;
 
     #[inline]
-    pub fn set(value: u8) {
+    pub fn write(value: u8) {
         unsafe {
             core::ptr::write(ADDRESS, value);
         }
     }
 
     #[inline]
-    pub fn get() -> u8 {
+    pub fn read() -> u8 {
         unsafe { core::ptr::read(ADDRESS) }
     }
 }
@@ -136,14 +136,14 @@ pub mod max_arrows {
     pub const MAX: u8 = 99;
 
     #[inline]
-    pub fn set(value: u8) {
+    pub fn write(value: u8) {
         unsafe {
             core::ptr::write(ADDRESS, value);
         }
     }
 
     #[inline]
-    pub fn get() -> u8 {
+    pub fn read() -> u8 {
         unsafe { core::ptr::read(ADDRESS) }
     }
 }
@@ -154,14 +154,14 @@ pub mod bombs {
     pub const MAX: u8 = 99;
 
     #[inline]
-    pub fn set(value: u8) {
+    pub fn write(value: u8) {
         unsafe {
             core::ptr::write(ADDRESS, value);
         }
     }
 
     #[inline]
-    pub fn get() -> u8 {
+    pub fn read() -> u8 {
         unsafe { core::ptr::read(ADDRESS) }
     }
 }
@@ -172,14 +172,14 @@ pub mod max_bombs {
     pub const MAX: u8 = 99;
 
     #[inline]
-    pub fn set(value: u8) {
+    pub fn write(value: u8) {
         unsafe {
             core::ptr::write(ADDRESS, value);
         }
     }
 
     #[inline]
-    pub fn get() -> u8 {
+    pub fn read() -> u8 {
         unsafe { core::ptr::read(ADDRESS) }
     }
 }
@@ -189,16 +189,15 @@ pub mod super_crouch {
     pub const ADDRESS: *mut u32 = 0x10537550 as *mut u32;
 
     #[inline]
-    pub fn enable() {
-        unsafe {
-            core::ptr::write(ADDRESS, 0x41f0_0000);
-        }
-    }
-
-    #[inline]
-    pub fn disable() {
-        unsafe {
-            core::ptr::write(ADDRESS, 0x4040_0000);
+    pub fn enable(enable: bool) {
+        if enable {
+            unsafe {
+                core::ptr::write(ADDRESS, 0x41f0_0000);
+            }
+        } else {
+            unsafe {
+                core::ptr::write(ADDRESS, 0x4040_0000);
+            }
         }
     }
 }
@@ -206,16 +205,15 @@ pub mod super_crouch {
 /// Link's super fast during swimming (different from "normal" superswims)
 pub mod super_swim {
     #[inline]
-    pub fn enable() {
-        unsafe {
-            core::ptr::write(super::air::ADDRESS, 0xdff);
-        }
-    }
-
-    #[inline]
-    pub fn disable() {
-        unsafe {
-            core::ptr::write(super::air::ADDRESS, super::air::MAX);
+    pub fn enable(enable: bool) {
+        if enable {
+            unsafe {
+                core::ptr::write(super::air::ADDRESS, 0xdff);
+            }
+        } else {
+            unsafe {
+                core::ptr::write(super::air::ADDRESS, super::air::MAX);
+            }
         }
     }
 }
@@ -234,7 +232,7 @@ pub mod sea_charts {
         Mapped = 3,
     }
 
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum Location {
         ForsakenFortress = 1,
         FourEyeReef = 2,
@@ -287,15 +285,20 @@ pub mod sea_charts {
         FiveStarIsles = 49,
     }
 
+    #[allow(unused_imports)]
+    pub use Location::*;
+    #[allow(unused_imports)]
+    pub use State::*;
+
     #[inline]
-    pub fn set(value: [u8; 49]) {
+    pub fn write(value: [u8; 49]) {
         unsafe {
             core::ptr::write(ADDRESS, value);
         }
     }
 
     #[inline]
-    pub fn get() -> [u8; 49] {
+    pub fn read() -> [u8; 49] {
         unsafe { core::ptr::read(ADDRESS) }
     }
 
@@ -321,6 +324,7 @@ pub mod sea_charts {
 
 pub mod equipped_items {
 
+    use crate::items::Item;
     pub use Button::*;
 
     pub enum Button {
@@ -330,15 +334,45 @@ pub mod equipped_items {
     }
 
     #[inline]
-    pub fn set(button: Button, item: crate::items::Item) {
+    pub fn write(button: usize, item: u8) {
         unsafe {
-            core::ptr::write(button as usize as *mut u8, item as u8);
+            core::ptr::write(button as *mut u8, item);
         }
     }
 
     #[inline]
-    pub fn get(button: Button) -> u8 {
-        unsafe { core::ptr::read(button as usize as *mut u8) }
+    pub fn read(button: usize) -> u8 {
+        unsafe { core::ptr::read(button as *mut u8) }
+    }
+
+    #[inline]
+    pub fn set(button: Button, item: Option<Item>) {
+        if let Some(item) = item {
+            write(button as usize, item as u8);
+        } else {
+            write(button as usize, 0);
+        }
+    }
+
+    #[inline]
+    pub fn get(button: Button) -> Option<Item> {
+        match read(button as usize) {
+            x if x == Item::Bombs as u8 => Some(Item::Bombs),
+            x if x == Item::Boomerang as u8 => Some(Item::Boomerang),
+            x if x == Item::DekuLeaf as u8 => Some(Item::DekuLeaf),
+            x if x == Item::DeluxeBox as u8 => Some(Item::DeluxeBox),
+            x if x == Item::GrapplingHook as u8 => Some(Item::GrapplingHook),
+            x if x == Item::HeroBow as u8 => Some(Item::HeroBow),
+            x if x == Item::Hookshot as u8 => Some(Item::Hookshot),
+            x if x == Item::IronBoots as u8 => Some(Item::IronBoots),
+            x if x == Item::MagicArmor as u8 => Some(Item::MagicArmor),
+            x if x == Item::PictoBox as u8 => Some(Item::PictoBox),
+            x if x == Item::SkullHammer as u8 => Some(Item::SkullHammer),
+            x if x == Item::Telescope as u8 => Some(Item::Telescope),
+            x if x == Item::TingleBottle as u8 => Some(Item::TingleBottle),
+            x if x == Item::WindWaker as u8 => Some(Item::WindWaker),
+            _ => None,
+        }
     }
 }
 
@@ -349,14 +383,14 @@ pub mod position {
         pub const ADDRESS: *mut f32 = 0x1096ef48 as *mut f32;
 
         #[inline]
-        pub fn set(value: f32) {
+        pub fn write(value: f32) {
             unsafe {
                 core::ptr::write(ADDRESS, value);
             }
         }
 
         #[inline]
-        pub fn get() -> f32 {
+        pub fn read() -> f32 {
             unsafe { core::ptr::read(ADDRESS) }
         }
     }
@@ -365,14 +399,14 @@ pub mod position {
         pub const ADDRESS: *mut f32 = 0x1096ef50 as *mut f32;
 
         #[inline]
-        pub fn set(value: f32) {
+        pub fn write(value: f32) {
             unsafe {
                 core::ptr::write(ADDRESS, value);
             }
         }
 
         #[inline]
-        pub fn get() -> f32 {
+        pub fn read() -> f32 {
             unsafe { core::ptr::read(ADDRESS) }
         }
     }
@@ -381,14 +415,14 @@ pub mod position {
         pub const ADDRESS: *mut f32 = 0x1096ef4c as *mut f32;
 
         #[inline]
-        pub fn set(value: f32) {
+        pub fn write(value: f32) {
             unsafe {
                 core::ptr::write(ADDRESS, value);
             }
         }
 
         #[inline]
-        pub fn get() -> f32 {
+        pub fn read() -> f32 {
             unsafe { core::ptr::read(ADDRESS) }
         }
     }
@@ -397,14 +431,14 @@ pub mod position {
         pub const ADDRESS: *mut u16 = 0x1096ef12 as *mut u16;
 
         #[inline]
-        pub fn set(value: u16) {
+        pub fn write(value: u16) {
             unsafe {
                 core::ptr::write(ADDRESS, value);
             }
         }
 
         #[inline]
-        pub fn get() -> u16 {
+        pub fn read() -> u16 {
             unsafe { core::ptr::read(ADDRESS) }
         }
     }
@@ -413,14 +447,14 @@ pub mod position {
         pub const ADDRESS: *mut u16 = 0x1096ef0a as *mut u16;
 
         #[inline]
-        pub fn set(value: u16) {
+        pub fn write(value: u16) {
             unsafe {
                 core::ptr::write(ADDRESS, value);
             }
         }
 
         #[inline]
-        pub fn get() -> u16 {
+        pub fn read() -> u16 {
             unsafe { core::ptr::read(ADDRESS) }
         }
     }
@@ -430,7 +464,7 @@ pub mod position {
         pub const OFFSET: usize = 0x6938;
 
         #[inline]
-        pub fn set(value: f32) {
+        pub fn write(value: f32) {
             unsafe {
                 let ptr = core::ptr::read(ADDRESS);
                 let ptr = (ptr + OFFSET) as *mut f32;
@@ -442,7 +476,7 @@ pub mod position {
         }
 
         #[inline]
-        pub fn get() -> f32 {
+        pub fn read() -> f32 {
             unsafe {
                 let ptr = core::ptr::read(ADDRESS);
                 let ptr = (ptr + OFFSET) as *mut f32;
@@ -471,5 +505,101 @@ pub mod hover {
                 core::ptr::write(ptr, 0x4210_0000);
             }
         }
+    }
+}
+
+pub mod collision {
+    pub const ADDRESS: *mut usize = 0x10976de4 as *mut usize;
+    pub const OFFSET: usize = 2060 + 40;
+
+    #[allow(unused_imports)]
+    pub use Version::*;
+
+    pub enum Version {
+        ChestStorage = 0x4,
+        DoorCancel = 0x4004,
+    }
+
+    #[inline]
+    pub fn set(value: u32) {
+        unsafe {
+            let ptr = core::ptr::read(ADDRESS);
+            let ptr = (ptr + OFFSET) as *mut u32;
+
+            if wut::ptr::is_valid(ptr) {
+                core::ptr::write(ptr, value);
+            }
+        }
+    }
+
+    #[inline]
+    pub fn get() -> u32 {
+        unsafe {
+            let ptr = core::ptr::read(ADDRESS);
+            let ptr = (ptr + OFFSET) as *mut u32;
+
+            if wut::ptr::is_valid(ptr) {
+                core::ptr::read(ptr)
+            } else {
+                0
+            }
+        }
+    }
+
+    #[inline]
+    pub fn enable(version: Version) {
+        set(get() | version as u32)
+    }
+
+    #[inline]
+    pub fn disable(version: Version) {
+        set(get() & !(version as u32))
+    }
+}
+
+pub mod storage {
+    pub const ADDRESS: *mut u8 = 0x10976543 as *mut u8;
+
+    #[inline]
+    pub fn set(value: u8) {
+        unsafe {
+            core::ptr::write(ADDRESS, value);
+        }
+    }
+
+    #[inline]
+    pub fn get() -> u8 {
+        unsafe { core::ptr::read(ADDRESS) }
+    }
+
+    #[inline]
+    pub fn enable() {
+        set(1);
+    }
+
+    #[inline]
+    pub fn disable() {
+        set(0);
+    }
+}
+
+pub mod soft_reset {
+    pub const ADDRESS: *mut u8 = 0x1098f293 as *mut u8;
+
+    #[inline]
+    pub fn set(value: u8) {
+        unsafe {
+            core::ptr::write(ADDRESS, value);
+        }
+    }
+
+    #[inline]
+    pub fn get() -> u8 {
+        unsafe { core::ptr::read(ADDRESS) }
+    }
+
+    #[inline]
+    pub fn activate() {
+        set(1);
     }
 }

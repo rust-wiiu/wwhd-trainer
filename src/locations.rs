@@ -21,9 +21,9 @@ pub fn teleport(location: Location) {
     use crate::stages::{layer, reload, room, spawn, stage};
 
     stage::set(location.stage);
-    spawn::set(location.spawn);
-    room::set(location.room);
-    layer::set(location.layer);
+    spawn::write(location.spawn);
+    room::write(location.room);
+    layer::write(location.layer);
     reload::activate();
 }
 

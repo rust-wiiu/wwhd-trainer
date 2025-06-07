@@ -14,20 +14,20 @@ pub mod reload {
     pub const ADDRESS: *mut u8 = 0x109763fc as *mut u8;
 
     #[inline]
-    pub fn set(value: u8) {
+    pub fn write(value: u8) {
         unsafe {
             core::ptr::write(ADDRESS, value);
         }
     }
 
     #[inline]
-    pub fn get() -> u8 {
+    pub fn read() -> u8 {
         unsafe { core::ptr::read(ADDRESS) }
     }
 
     #[inline]
     pub fn activate() {
-        set(1);
+        write(1);
     }
 }
 
@@ -35,14 +35,14 @@ pub mod spawn {
     pub const ADDRESS: *mut u8 = 0x109763f9 as *mut u8;
 
     #[inline]
-    pub fn set(value: u8) {
+    pub fn write(value: u8) {
         unsafe {
             core::ptr::write(ADDRESS, value);
         }
     }
 
     #[inline]
-    pub fn get() -> u8 {
+    pub fn read() -> u8 {
         unsafe { core::ptr::read(ADDRESS) }
     }
 }
@@ -51,14 +51,14 @@ pub mod room {
     pub const ADDRESS: *mut u8 = 0x109763fa as *mut u8;
 
     #[inline]
-    pub fn set(value: u8) {
+    pub fn write(value: u8) {
         unsafe {
             core::ptr::write(ADDRESS, value);
         }
     }
 
     #[inline]
-    pub fn get() -> u8 {
+    pub fn read() -> u8 {
         unsafe { core::ptr::read(ADDRESS) }
     }
 }
@@ -67,14 +67,14 @@ pub mod layer {
     pub const ADDRESS: *mut u8 = 0x109763fb as *mut u8;
 
     #[inline]
-    pub fn set(value: u8) {
+    pub fn write(value: u8) {
         unsafe {
             core::ptr::write(ADDRESS, value);
         }
     }
 
     #[inline]
-    pub fn get() -> u8 {
+    pub fn read() -> u8 {
         unsafe { core::ptr::read(ADDRESS) }
     }
 }
@@ -581,15 +581,25 @@ pub mod stage {
     );
 
     #[inline]
-    pub fn set(value: Stage) {
+    pub fn write(value: [u8; 8]) {
         unsafe {
-            core::ptr::write(ADDRESS, value.id());
+            core::ptr::write(ADDRESS, value);
         }
     }
 
     #[inline]
+    pub fn read() -> [u8; 8] {
+        unsafe { core::ptr::read(ADDRESS) }
+    }
+
+    #[inline]
+    pub fn set(stage: Stage) {
+        write(stage.id());
+    }
+
+    #[inline]
     pub fn get() -> Stage {
-        Stage::try_from(unsafe { core::ptr::read(ADDRESS) }).unwrap_or(Stage::TitleScreen)
+        Stage::try_from(read()).unwrap_or(Stage::TitleScreen)
     }
 }
 
@@ -598,7 +608,7 @@ pub mod daytime {
 
     pub use Daytime::*;
 
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum Daytime {
         Dawn = 0x4300_0000,
         Day = 0x4320_0000,
@@ -608,20 +618,20 @@ pub mod daytime {
     impl_display!(Daytime);
 
     #[inline]
-    pub fn set(value: u32) {
+    pub fn write(value: u32) {
         unsafe {
             core::ptr::write(ADDRESS, value);
         }
     }
 
     #[inline]
-    pub fn get() -> u32 {
+    pub fn read() -> u32 {
         unsafe { core::ptr::read(ADDRESS) }
     }
 
     #[inline]
-    pub fn enable(value: Daytime) {
-        set(value as u32);
+    pub fn set(value: Daytime) {
+        write(value as u32);
     }
 }
 
@@ -630,7 +640,7 @@ pub mod weather {
 
     pub use Weather::*;
 
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum Weather {
         Normal = 0x0000_ffff,
         Cloudy = 0x0001_ffff,
@@ -640,19 +650,19 @@ pub mod weather {
     impl_display!(Weather);
 
     #[inline]
-    pub fn set(value: u32) {
+    pub fn write(value: u32) {
         unsafe {
             core::ptr::write(ADDRESS, value);
         }
     }
 
     #[inline]
-    pub fn get() -> u32 {
+    pub fn read() -> u32 {
         unsafe { core::ptr::read(ADDRESS) }
     }
 
     #[inline]
-    pub fn enable(value: Weather) {
-        set(value as u32);
+    pub fn set(value: Weather) {
+        write(value as u32);
     }
 }
